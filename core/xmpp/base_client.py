@@ -16,22 +16,17 @@ if sys.version_info < (3, 0):
 else:
     raw_input = input
 
-class FileListStanza(object):
-    def __init__(self, filenames):
-        self.xml = et.fromstring('<sl>%s</sl>' % ' '.join(filenames))
-        self.namespace = 'https://xmpp.kwoh.de/protocol/bitween_shared_files'
+class MagnetLinksStanza(object):
+    def __init__(self, magnetlinks):
+        root = et.Element("magnet_links")
+        for l in magnetlinks:
+            link = et.Element("link")
+            link.text = l
+            root.append( link )
+        self.xml = root
+        self.namespace = 'https://xmpp.kwoh.de/protocol/magnet_links'
 
 class XmppClientBase(sleekxmpp.ClientXMPP):
-    """
-
-    the commands you define are triggered in the message handle.
-        example:
-            self.commands = {'help': self.send_help}
-
-            def help(self, sender, msg):
-                msg.return('that should help you')
-
-    """
 
     def __init__(self, jid, password, settings={}, input_queue=None, output_queue=None, shares=[]):
         if not settings:
@@ -48,7 +43,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0045')  # MUC
+        #self.register_plugin('xep_0045')  # MUC
         self.register_plugin('xep_0163')  # pep
         self.register_plugin('xep_0060')  # PubSub
         # The session_start event will be triggered when
@@ -74,12 +69,9 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         # The message event is triggered whenever a message
         # stanza is received. Be aware that that includes
         # MUC messages and error messages.
-        self.add_event_handler("message", self.message)
-        self.add_event_handler("groupchat_message", self.muc_message)
-
-        self.add_event_handler('roster_update', self.on_roster_update)
-
-
+        #self.add_event_handler("message", self.message)
+        #self.add_event_handler("groupchat_message", self.muc_message)
+        #self.add_event_handler('roster_update', self.on_roster_update)
 
     def start(self, event):
         """
@@ -95,16 +87,16 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
                      data.
         """
         logging.debug('sending presence & getting roster')
-        self.send_presence()
+        self.send_presence(ppriority=0)
         self.get_roster()
 
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
-        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/bitween_shared_files')
-        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/bitween_shared_files')
-        self['xep_0060'].map_node_event('bitween_shared_files', 'bitween_shared_files')
-        self.add_event_handler('bitween_shared_files_publish', self.on_bitween_shared_files_publish)
+        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')
+        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')
+        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')
+        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
-        self['xep_0163'].publish(FileListStanza(self.shares))
+        self['xep_0163'].publish(MagnetLinksStanza(self.shares))
         #for room_password in self.settings.get('autojoin', []):
         #    self.plugin['xep_0045'].joinMUC(room_password[0],
         #                                    self.jid.split('@')[0],
@@ -132,22 +124,18 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
     def muc_message(self, msg):
         pass
 
-    def on_roster_update(self, iq, **kwargs):
-        self._handle_roster(iq)
-        logging.debug('got roster: %s' % self.client_roster)
-
-    def on_bitween_shared_files_publish(self, msg):
+    def on_magnet_links_publish(self, msg):
         """ handle incoming files """
-        print('2222  Published item %s to %s:' % (
+        print('Published item %s to %s:' % (
             msg['pubsub_event']['items']['item']['id'],
             msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
         if data is not None:
-            print(tostring(data))
+            for d in data:
+                print(d.text)
+                print(tostring(d))
         else:
             print('No item content')
-        #logging.debug('on_bitween_shared_files_publish args: %s' % args)
-        #logging.debug('on_bitween_shared_files_publish args: %s' % kwargs)
 
 
 
