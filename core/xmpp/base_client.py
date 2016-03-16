@@ -7,8 +7,10 @@ import sleekxmpp
 import logging
 import xml.etree.cElementTree as et
 from sleekxmpp.xmlstream import tostring
-
+import asyncio
 import json
+
+from queue import Empty
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -16,62 +18,36 @@ if sys.version_info < (3, 0):
 else:
     raw_input = input
 
+
 class MagnetLinksStanza(object):
     def __init__(self, magnetlinks):
         root = et.Element("magnet_links")
         for l in magnetlinks:
             link = et.Element("link")
             link.text = l
-            root.append( link )
+            root.append(link)
         self.xml = root
         self.namespace = 'https://xmpp.kwoh.de/protocol/magnet_links'
 
-class XmppClientBase(sleekxmpp.ClientXMPP):
 
+class XmppClientBase(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password, settings={}, input_queue=None, output_queue=None, shares=[]):
+        super(XmppClientBase, self).__init__(jid, password)
+
         if not settings:
             settings = {}
 
         self.input_queue = input_queue
         self.output_queue = output_queue
-
         self.shares = shares
 
         self.settings = settings
-        logging.debug('connecting %s' % jid)
-        sleekxmpp.ClientXMPP.__init__(self, jid, password)
-
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        #self.register_plugin('xep_0045')  # MUC
         self.register_plugin('xep_0163')  # pep
         self.register_plugin('xep_0060')  # PubSub
-        # The session_start event will be triggered when
-        # the bot establishes its connection with the server
-        # and the XML streams are ready for use. We want to
-        # listen for this event so that we we can initialize
-        # our roster.
+
         self.add_event_handler("session_start", self.start)
-
-        # Generic pubsub event handlers for all nodes
-        """
-        self.add_event_handler('pubsub_publish', handler)
-        self.add_event_handler('pubsub_retract', handler)
-        self.add_event_handler('pubsub_purge', handler)
-        self.add_event_handler('pubsub_delete', handler)
-        """
-
-        # Use custom-named events for certain nodes, in this case
-        # the User Tune node from PEP.
-        #self['xep_0060'].map_node_event('bitween_shared_files', 'bitween_shared_files')
-
-
-        # The message event is triggered whenever a message
-        # stanza is received. Be aware that that includes
-        # MUC messages and error messages.
-        #self.add_event_handler("message", self.message)
-        #self.add_event_handler("groupchat_message", self.muc_message)
-        #self.add_event_handler('roster_update', self.on_roster_update)
 
     def start(self, event):
         """
@@ -87,44 +63,43 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
                      data.
         """
         logging.debug('sending presence & getting roster')
-        self.send_presence(ppriority=0)
+        self.send_presence(ppriority=-128, pstatus='', ptype='xa')
         self.get_roster()
-
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
-        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')
-        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')
-        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')
+        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
+        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
+        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
         self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
+        ## Generic pubsub event handlers for all nodes
+        #
+        # self.add_event_handler('pubsub_publish', handler)
+        # self.add_event_handler('pubsub_retract', handler)
+        # self.add_event_handler('pubsub_purge', handler)
+        # self.add_event_handler('pubsub_delete', handler)
+
         self['xep_0163'].publish(MagnetLinksStanza(self.shares))
-        #for room_password in self.settings.get('autojoin', []):
-        #    self.plugin['xep_0045'].joinMUC(room_password[0],
-        #                                    self.jid.split('@')[0],
-        #                                    # If a room password is needed, use:
-        #                                    password=room_password[1],
-        #                                    wait=True)
 
-    def message(self, msg):
-        """
-        Process incoming message stanzas. Be aware that this also
-        includes MUC messages and error messages. It is usually
-        a good idea to check the messages's type before processing
-        or sending replies.
+        self.scheduler.add("asyncio_queue", 2, self.process_queue,
+            repeat=True, qpointer=self.event_queue)
 
-        Arguments:
-            msg -- The received message stanza. See the documentation
-                   for stanza objects and the Message stanza to see
-                   how it may be used.
-        """
-        if msg['type'] in ('chat', 'normal'):
-            logging.debug('%s' % msg)
+    def process_queue(self):
+        '''
+        do something with the queue here
 
+        :return:
+        '''
+        try:
+            msg = self.input_queue.get(False) #doesn't block
+            #logging.info("got msg from main: %s" % msg)
+            # schedule the reply
+            #scheduler.Task("SEND REPLY", 0, self.send_reply, (msg,)).run()
+        except Empty:
             pass
-
-    def muc_message(self, msg):
         pass
 
-    def on_magnet_links_publish(self, msg):
+    @staticmethod
+    def on_magnet_links_publish(msg):
         """ handle incoming files """
         print('Published item %s to %s:' % (
             msg['pubsub_event']['items']['item']['id'],
@@ -137,7 +112,21 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         else:
             print('No item content')
 
+    ##
+    #  async commands
+    ##
+    @asyncio.coroutine
+    def add_mlinks(self, mlinks):
+        """
 
+        :param mlinks: a list of magnet links
+        :return:
+        """
+        pass
+
+    @asyncio.coroutine
+    def del_mlinks(self, mlinks):
+        pass
 
 
 """
