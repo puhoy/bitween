@@ -10,6 +10,11 @@ from sleekxmpp.xmlstream import tostring
 import asyncio
 import json
 
+import logging
+import log
+
+logger = logging.getLogger(__name__)
+
 from queue import Empty
 
 if sys.version_info < (3, 0):
@@ -62,7 +67,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
                      event does not provide any additional
                      data.
         """
-        logging.debug('sending presence & getting roster')
+        logger.debug('sending presence & getting roster')
         self.send_presence(ppriority=-128, pstatus='', ptype='xa')
         self.get_roster()
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
@@ -91,7 +96,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         '''
         try:
             msg = self.input_queue.get(False) #doesn't block
-            #logging.info("got msg from main: %s" % msg)
+            #logger.info("got msg from main: %s" % msg)
             # schedule the reply
             #scheduler.Task("SEND REPLY", 0, self.send_reply, (msg,)).run()
         except Empty:

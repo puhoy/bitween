@@ -1,0 +1,8 @@
+{
+  "xmpp_accounts": [
+    {
+      "jid": "user@domain",
+      "password": ""
+    }
+  ]
+}

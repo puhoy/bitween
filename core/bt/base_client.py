@@ -8,6 +8,11 @@ import time
 
 from threading import Thread
 
+import logging
+import log
+
+logger = logging.getLogger(__name__)
+
 class TorrentSession(Thread):  # ist das schon threaded?
     """
     Backend for the TorrentSession
@@ -107,7 +112,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
             conn.close()
 
     def __del__(self):
-        logging.info("torrentsession exits!")
+        logger.info("torrentsession exits!")
         self.exit(0)
 
     def safe_shutdown(self):
@@ -143,6 +148,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
                 }
             }
         """
+        logger.debug('starting handle queue processing')
 
         while not self.input_queue.empty():
             d = self.input_queue.get()
@@ -157,13 +163,13 @@ class TorrentSession(Thread):  # ist das schon threaded?
             elif d.get('pauseTorrent'):
                 handle = d.get('pauseTorrent')
                 status = handle.status()
-                logging.info(status.paused)
+                logger.info(status.paused)
                 if not status.paused:
-                    logging.debug('pausing')
+                    logger.debug('pausing')
                     handle.auto_managed(False)
                     handle.pause()
                 else:
-                    logging.debug('resume')
+                    logger.debug('resume')
                     handle.auto_managed(True)
                     handle.resume()
             elif d.get('pause'):
@@ -179,7 +185,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
                 # TODO find out the possible priorities
                 # the documentation doesnt seem to have that information...
                 handle.file_priority(index, prio)
-                logging.info('new file priorities: %s ' % handle.file_priorities())
+                logger.info('new file priorities: %s ' % handle.file_priorities())
 
     def pause(self, what):
         """ pauses or unpauses the session
@@ -241,7 +247,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
             print("%s: %s" % (attr, value))
         """
 
-        logging.info("lt läuft...")
+        logger.info("lt läuft...")
         while not self.end:
             # neue events abarbeiten
             self.handle_queue()
@@ -251,12 +257,12 @@ class TorrentSession(Thread):  # ist das schon threaded?
             #self.statusbar.emit("%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status))
 
-            self.output_queue({'status': "%.2f up, %.2f down @ %s peers - %s" % (
-                sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status)})
+            #self.output_queue({'status': "%.2f up, %.2f down @ %s peers - %s" % (
+            #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status)})
 
             for handle in self.handles:
                 stat = handle.status()
-                logging.debug("%s - Progress: %s; Peers: %s; State: %s" %
+                logger.debug("%s - Progress: %s; Peers: %s; State: %s" %
                               (handle.name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
                 #self.torrent_updated.emit(handle, handle.status())
 
@@ -268,12 +274,12 @@ class TorrentSession(Thread):  # ist das schon threaded?
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 elif alert.what() == "file_error_alert":
-                    logging.info("%s" % alert.error)
+                    logger.info("%s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
             time.sleep(1)
 
-        logging.debug("ending")
+        logger.debug("ending")
         # ending - save stuff
         # erase previous torrents first
         self.erase_all_torrents_from_db()
@@ -285,23 +291,23 @@ class TorrentSession(Thread):  # ist das schon threaded?
         # wait for everything to save and finish!
         while self.handles:
             for alert in self.session.pop_alerts():
-                logging.debug("- %s %s" % (alert.what(), alert.message()))
+                logger.debug("- %s %s" % (alert.what(), alert.message()))
                 if (alert.what() == "save_resume_data_alert"):
                     handle = alert.handle
                     self.save(handle, alert.resume_data)
-                    logging.debug("removing %s" % handle.name())
+                    logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
-                    logging.debug("removing %s" % handle.name())
+                    logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
 
         self.save_state()
         time.sleep(1)
-        logging.debug("handles at return: %s" % self.handles)
+        logger.debug("handles at return: %s" % self.handles)
         return
 
     def add_magnetlink(self, magnetlink, save_path):
@@ -312,7 +318,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
         :param save_path: string with the path to save
         :return:
         """
-        logging.info("adding mlink")
+        logger.info("adding mlink")
         handle = lt.add_magnet_uri(self.session, magnetlink, {'save_path': save_path})
         self.handles.append(handle)
         #self.torrent_added.emit(handle)
@@ -325,7 +331,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
         :param save_path: string with the path to save
         :return:
         """
-        logging.info("adding torrentfile")
+        logger.info("adding torrentfile")
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
         self.add_torrent_by_info(info, save_path)
@@ -340,10 +346,10 @@ class TorrentSession(Thread):  # ist das schon threaded?
         :return:
         """
         if not resumedata:
-            logging.debug("no resume data!")
+            logger.debug("no resume data!")
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path})
         else:
-            logging.debug('resuming')
+            logger.debug('resuming')
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.append(handle)
@@ -411,12 +417,12 @@ class TorrentSession(Thread):  # ist das schon threaded?
             encsettings = f[1]
             settings = lt.bdecode(encsettings)
             self.session.load_state(settings)
-            logging.info("loaded settings: %s" % settings)
+            logger.info("loaded settings: %s" % settings)
 
         # load last torrents
         erg = c.execute("SELECT * FROM torrents")
         for t in erg.fetchall():
-            logging.info("importing %s" % t[0])
+            logger.info("importing %s" % t[0])
             entry = lt.bdecode(t[1])
             fastresumedata = t[2]
             save_path = t[3]
