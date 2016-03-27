@@ -11,9 +11,12 @@ from threading import Thread
 import logging
 import log
 
+from .. import handlelist
+
 logger = logging.getLogger(__name__)
 
-class TorrentSession(Thread):  # ist das schon threaded?
+
+class TorrentSession(Thread):
     """
     Backend for the TorrentSession
     """
@@ -23,12 +26,14 @@ class TorrentSession(Thread):  # ist das schon threaded?
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
-        self.handles = []  # the torrent handles
         self.input_queue = input_queue
         self.output_queue = output_queue
         self.state_str = ['queued', 'checking', 'downloading metadata', \
                           'downloading', 'finished', 'seeding', 'allocating', 'checking fastresume']
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
+
+        self.handles = handlelist
+
         # self.session.set_alert_mask(lt.alert.category_t.storage_notification)
 
         """-----alert categories-----
@@ -54,6 +59,8 @@ class TorrentSession(Thread):  # ist das schon threaded?
 
         self.setup_settings()
         self.setup_db()
+
+        self.output_queue.put(['bt_ready'])
 
     def setup_settings(self):
         """
@@ -125,41 +132,16 @@ class TorrentSession(Thread):  # ist das schon threaded?
         self.end = True
 
     def handle_queue(self):
-        """
-        gets & processes all messages in the queue.
-
-        possible every message is a dict.
-        possible messages:
-            {'addmagnet': magnetlink,
-            'storepath': path to store}  -- adds a magnetlink.
-
-            {'addtorrent': torrent_file_path,
-            'storepath': path to store}  -- adds a torrent file.
-
-            {'deltorrent': handle}  -- deletes the torrenthandle "handle"
-
-            {'pausetorrent': handle}  -- pauses the handle
-
-            {'pause': boolean}  -- pauses(if True) or unpauses the whole session
-
-            {'setprio': {
-                    'index': index,  -- index of the file in the torrenthandle
-                    'prio': prio,  -- priority to set
-                }
-            }
-        """
         logger.debug('starting handle queue processing')
-
         while not self.input_queue.empty():
-            d = self.input_queue.get()
-            if d.get('addmagnet'):
-                self.add_magnetlink(d.get('addmagnet'), d.get('storepath'))
-            elif d.get('addtorrent'):
-                self.add_torrent(d.get('addtorrent'), d.get('storepath'))
-            elif d.get('deletetorrent'):
-                self.del_torrent(d.get('deletetorrent'))
-            elif d.get('shutdown'):
-                self.end = True
+            logger.debug('got something in queue')
+            items = self.input_queue.get()
+            f_name = items[0]
+            args = items[1:]
+            logger.debug('calling %s(%s)' % (f_name, args))
+            f = getattr(self, 'on_%s' % f_name)
+            f(*args)
+            '''
             elif d.get('pauseTorrent'):
                 handle = d.get('pauseTorrent')
                 status = handle.status()
@@ -186,6 +168,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
                 # the documentation doesnt seem to have that information...
                 handle.file_priority(index, prio)
                 logger.info('new file priorities: %s ' % handle.file_priorities())
+            '''
 
     def pause(self, what):
         """ pauses or unpauses the session
@@ -235,7 +218,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
         were done and the thread will exit.
         """
         # self.statusbar.emit(self.status)
-        self.output_queue.put({'status': self.status})
+        #self.output_queue.put({'status': self.status})
         # self.setup_blocklist()
         self.resume()
 
@@ -253,6 +236,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
             self.handle_queue()
 
             sessionstat = self.session.status()
+            logger.debug(sessionstat)
 
             #self.statusbar.emit("%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status))
@@ -310,7 +294,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
         logger.debug("handles at return: %s" % self.handles)
         return
 
-    def add_magnetlink(self, magnetlink, save_path):
+    def on_add_magnetlink(self, magnetlink, save_path):
         """
         creates a handle for a magnetlink and adds it to the session
 
@@ -323,7 +307,7 @@ class TorrentSession(Thread):  # ist das schon threaded?
         self.handles.append(handle)
         #self.torrent_added.emit(handle)
 
-    def add_torrent(self, torrentfilepath, save_path):
+    def on_add_torrent(self, torrentfilepath, save_path):
         """
         creates a handle for a torrentfile and adds it to the session
 
@@ -334,9 +318,9 @@ class TorrentSession(Thread):  # ist das schon threaded?
         logger.info("adding torrentfile")
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
-        self.add_torrent_by_info(info, save_path)
+        self.on_add_torrent_by_info(info, save_path)
 
-    def add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
+    def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
         needed to resume torrents by the saved resume_data
 
@@ -355,7 +339,26 @@ class TorrentSession(Thread):  # ist das schon threaded?
         self.handles.append(handle)
         #self.torrent_added.emit(handle)
 
-    def del_torrent(self, handle):
+    def on_generate_torrent(self, folder):
+        '''
+        generates a handle for a file or folder
+        '''
+        logging.info('generating a new torrent for %s' % os.path.abspath(folder))
+        shared_folder = 'shared'
+        #for root, dirs, files in os.walk(shared_folder):
+        #    for file in files:
+
+        fs = lt.file_storage()
+        lt.add_files(fs, os.path.abspath(folder))
+        t = lt.create_torrent(fs)
+        t.set_creator('libtorrent %s' % lt.version)
+        lt.set_piece_hashes(t, shared_folder)
+        torrent = t.generate()
+        info = lt.torrent_info(torrent)
+        self.on_add_torrent_by_info(info, save_path=shared_folder)
+
+
+    def on_del_torrent(self, handle):
         """saves the resume data for torrent
         when done, save_resume_data_alert will be thrown, then its safe to really delete the torrent
         """

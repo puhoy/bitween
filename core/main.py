@@ -3,7 +3,7 @@ from .xmpp.base_client import XmppClientBase
 from .bt.base_client import TorrentSession
 
 from queue import Queue, Empty
-from threading import Thread
+from threading import Thread, Lock
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,8 @@ def create_torrent_client(main_bt_queue, bt_main_queue):
     ts.start()
     return ts
 
+from . import conf, handlelist
+
 
 class Sentinel(Thread):
     """
@@ -29,13 +31,13 @@ class Sentinel(Thread):
     xmpp_clients = []
     bt_client = {}
 
-    files = []
+    files = handlelist
 
     def __init__(self):
         super().__init__()
-        self.add_bt_client()
+        self.in_queue = Queue()
 
-    def add_xmpp_client(self, jid, password):
+    def _add_xmpp_client(self, jid: str, password: str) -> dict:
         logger.info('creating new xmpp client for %s' % jid)
 
         in_queue = Queue()
@@ -47,6 +49,7 @@ class Sentinel(Thread):
                                   'out_queue': out_queue})
 
     def add_bt_client(self):
+
         in_queue = Queue()
         out_queue = Queue()
 
@@ -57,16 +60,38 @@ class Sentinel(Thread):
                           'out_queue': out_queue}
 
     def run(self):
+        self.add_bt_client()
         logger.debug('starting loop')
         while True:
             # news?
             for client in self.xmpp_clients + [self.bt_client]:
                 try:
-                    (f, args, kwargs) = client['out_queue'].get(block=False)
-                    logger.debug('calling %s(%s, %s)' % (f, args, kwargs))
-                    f(args, kwargs)
+                    items = client['out_queue'].get(block=False)
+                    f_name = items[0]
+                    args = items[1:]
+                    logger.debug('calling %s(%s)' % (f_name, args))
+                    f = getattr(self, 'on_%s' % f_name)
+                    f(*args)
                 except Empty:
                     pass
+            try:
+                items = self.in_queue.get(block=False)
+                f_name = items[0]
+                args = items[1:]
+                logger.debug('calling %s(%s)' % (f_name, args))
+                f = getattr(self, 'on_%s' % f_name)
+                f(*args)
+            except Empty:
+                pass
 
+
+    def on_bt_ready(self):
+        for xmpp_account in conf.get('xmpp_accounts', []):
+            self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
+        #self.in_queue.put(['add_file', 'shared/df'])
+
+    def on_add_file(self, file):
+        logger.debug('adding file')
+        self.bt_client['in_queue'].put(['generate_torrent', file])
 
 
