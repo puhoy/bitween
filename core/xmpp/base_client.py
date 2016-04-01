@@ -10,6 +10,8 @@ from sleekxmpp.xmlstream import tostring
 import asyncio
 import json
 
+from pubsub import publish, Subscriber
+
 import logging
 import log
 
@@ -54,6 +56,8 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self.add_event_handler("session_start", self.start)
 
+        self.s = Subscriber()
+
     def start(self, event):
         """
         Process the session_start event.
@@ -85,7 +89,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self['xep_0163'].publish(MagnetLinksStanza(self.shares))
 
-        self.scheduler.add("asyncio_queue", 2, self.process_queue,
+        self.scheduler.add("", 2, self.process_queue,
             repeat=True, qpointer=self.event_queue)
 
     def process_queue(self):
