@@ -9,9 +9,57 @@ topics = {}
 lock = Lock()
 
 
+"""
+## how to pubsub
+
+### create a subscriber and subscribe min. one topic
+e.g.
+
+s = Subscriber()
+s.subscribe('myTopic')
+
+### then post to the topic:
+
+publish('myTopic', 'somestring', val=123)
+
+
+### get that message by defining some loop
+
+def loop():
+    while True:
+        if self.has_messages():
+            (topic, args, kwargs) = self.get()
+            print('%s, %s, %s' % topic, args, kwargs)
+
+
+
+## the whole thing as a class
+
+class MySub(Subscriber):
+    def __init__(self):
+        super().__init__()
+        self.subscribe('myTopic')
+        self.loop()
+
+    def loop():
+        while True:
+            if self.has_messages():
+                (topic, args, kwargs) = self.get()
+                print('%s, %s, %s' % topic, args, kwargs)
+
+"""
+
+
 def publish(topic, *args, **kwargs):
+    """
+    publish to a topic.
+    """
+
     t = get_topic(topic)
     logger.debug('got subscribers in topic: %s' % t['subscribers'])
+    if not t['subscribers']:
+        logger.error('published to topic with no subscribers')
+        return False
     with lock:
         for s in t['subscribers']:
             logger.debug('published message on topic %s: %s %s' % (topic, args, kwargs))

@@ -63,6 +63,8 @@ class TorrentSession(Thread):
         publish('bt_ready')
 
         self.s = Subscriber()
+        for topic in ['generate_torrent']:
+            self.s.subscribe(topic)
 
 
     def setup_settings(self):
@@ -307,6 +309,7 @@ class TorrentSession(Thread):
         logger.info("adding mlink")
         handle = lt.add_magnet_uri(self.session, magnetlink, {'save_path': save_path})
         self.handles.add(handle)
+        publish('new_handle')
         #self.torrent_added.emit(handle)
 
     def on_add_torrent(self, torrentfilepath, save_path):
@@ -321,6 +324,7 @@ class TorrentSession(Thread):
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
         self.on_add_torrent_by_info(info, save_path)
+        publish('new_handle')
 
     def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
@@ -339,6 +343,7 @@ class TorrentSession(Thread):
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.add(handle)
+        publish('new_handle')
         #self.torrent_added.emit(handle)
 
     def on_generate_torrent(self, folder):

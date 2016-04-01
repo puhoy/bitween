@@ -82,7 +82,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
 
-        self['xep_0163'].publish(MagnetLinksStanza(self.shares))
+        #self['xep_0163'].publish(MagnetLinksStanza(self.shares))
 
         self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
 

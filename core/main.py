@@ -36,8 +36,6 @@ class Sentinel(Thread, Subscriber):
 
     listen_to = ['bt_ready', 'add_file']
 
-
-
     def __init__(self):
         Thread.__init__(self)
         Subscriber.__init__(self)
@@ -78,4 +76,11 @@ class Sentinel(Thread, Subscriber):
 
     def on_add_file(self, file):
         logger.debug('adding file')
-        self.bt_client['in_queue'].put(['generate_torrent', file])
+        publish('generate_torrent', file)
+
+    def on_new_handle(self):
+        """
+        updates the list of handles and triggers all xmpp clients to send the new file list
+        """
+        publish('magnet_links_publish')  # call method on xmpp clients
+        pass
