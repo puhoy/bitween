@@ -36,11 +36,15 @@ class Sentinel(Thread, Subscriber):
 
     listen_to = ['bt_ready', 'add_file']
 
+
+
     def __init__(self):
-        super().__init__()
+        Thread.__init__(self)
+        Subscriber.__init__(self)
         self.subscribe('sentinel')
         for l in self.listen_to:
             self.subscribe(l)
+        self.name = 'sentinel'
 
     def _add_xmpp_client(self, jid: str, password: str) -> dict:
         logger.info('creating new xmpp client for %s' % jid)
@@ -56,14 +60,18 @@ class Sentinel(Thread, Subscriber):
         logger.debug('starting loop')
         while True:
             # news?
-            topic, args, kwargs = self.get()
-            try:
-                f = getattr(self, 'on_%s' % topic)
-                f(*args, **kwargs)
-            except:
-                logger.error('something went wrong when calling on_%s' % topic)
+            if self.has_messages():
+                (topic, args, kwargs) = self.get()
+                try:
+                    f = getattr(self, 'on_%s' % topic)
+                    f(*args, **kwargs)
+                except:
+                    logger.error('something went wrong when calling on_%s' % topic)
 
     def on_bt_ready(self):
+        """
+
+        """
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
             # self.in_queue.put(['add_file', 'shared/df'])

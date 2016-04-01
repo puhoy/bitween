@@ -10,5 +10,5 @@ http://stackoverflow.com/questions/6319207/are-lists-thread-safe
 
 lists seem to be thread safe, so this is the process-wide list of handles.
 """
-handlelist = HandleList()
+handlelist = HandleList([])
 

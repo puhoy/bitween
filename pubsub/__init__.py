@@ -11,9 +11,11 @@ lock = Lock()
 
 def publish(topic, *args, **kwargs):
     t = get_topic(topic)
+    logger.debug('got subscribers in topic: %s' % t['subscribers'])
     with lock:
         for s in t['subscribers']:
-            s.put(topic, args, kwargs)
+            logger.debug('published message on topic %s: %s %s' % (topic, args, kwargs))
+            s.put((topic, args, kwargs))
 
 
 def get_topic(topic):
@@ -32,8 +34,9 @@ def new_topic():
 
 
 class Subscriber:
-    def __init__(self):
+    def __init__(self, name=''):
         self.queue = Queue()
+        self.name = name
 
     def subscribe(self, topic):
         t = get_topic(topic)
@@ -45,17 +48,18 @@ class Subscriber:
                 logger.debug('already subscribed to %s' % topic)
                 return False
 
-    def put(self, *args, **kwargs):
-        self.queue.put(args, kwargs)
+    def put(self, topic, *args, **kwargs):
+        self.queue.put(topic, *args, **kwargs)
+
+    def has_messages(self):
+        return self.queue.qsize() != 0
 
     def get(self):
-        try:
-            topic, args, kwargs = self.queue.get(block=False)
-        except Empty:
-            return None
-        except:
-            return False
-        return topic, args, kwargs
+        logger.debug('%s has messages' % self, )
+        if self.has_messages():
+            (topic, args, kwargs) = self.queue.get(block=False)
+            return topic, args, kwargs
+        return False
 
     def __del__(self):
         with lock:
@@ -63,3 +67,6 @@ class Subscriber:
                 if self in t['subscribers']:
                     t['subscribers'].remove(self)
                     logger.debug('removed self from %s while deleting' % t)
+
+    def __repr__(self):
+        return self.name

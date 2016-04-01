@@ -11,6 +11,8 @@ from threading import Thread
 import logging
 import log
 
+from pubsub import publish, Subscriber
+
 from .. import handlelist
 
 logger = logging.getLogger(__name__)
@@ -21,13 +23,11 @@ class TorrentSession(Thread):
     Backend for the TorrentSession
     """
 
-    def __init__(self, input_queue, output_queue):
+    def __init__(self):
         super().__init__()
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
-        self.input_queue = input_queue
-        self.output_queue = output_queue
         self.state_str = ['queued', 'checking', 'downloading metadata', \
                           'downloading', 'finished', 'seeding', 'allocating', 'checking fastresume']
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
@@ -60,7 +60,10 @@ class TorrentSession(Thread):
         self.setup_settings()
         self.setup_db()
 
-        self.output_queue.put(['bt_ready'])
+        publish('bt_ready')
+
+        self.s = Subscriber()
+
 
     def setup_settings(self):
         """
@@ -133,14 +136,13 @@ class TorrentSession(Thread):
 
     def handle_queue(self):
         logger.debug('starting handle queue processing')
-        while not self.input_queue.empty():
-            logger.debug('got something in queue')
-            items = self.input_queue.get()
-            f_name = items[0]
-            args = items[1:]
-            logger.debug('calling %s(%s)' % (f_name, args))
-            f = getattr(self, 'on_%s' % f_name)
-            f(*args)
+        if self.s.has_messages():
+            topic, args, kwargs = self.s.get()
+            try:
+                f = getattr(self, 'on_%s' % topic)
+                f(*args, **kwargs)
+            except:
+                logger.error('something went wrong when calling on_%s' % topic)
             '''
             elif d.get('pauseTorrent'):
                 handle = d.get('pauseTorrent')

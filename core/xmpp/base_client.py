@@ -4,16 +4,15 @@ __author__ = 'meatpuppet'
 import sys
 
 import sleekxmpp
-import logging
 import xml.etree.cElementTree as et
 from sleekxmpp.xmlstream import tostring
 import asyncio
-import json
 
-from pubsub import publish, Subscriber
+from .. import handlelist
+
+from pubsub import Subscriber
 
 import logging
-import log
 
 logger = logging.getLogger(__name__)
 
@@ -38,15 +37,11 @@ class MagnetLinksStanza(object):
 
 
 class XmppClientBase(sleekxmpp.ClientXMPP):
-    def __init__(self, jid, password, settings={}, input_queue=None, output_queue=None, shares=[]):
+    def __init__(self, jid, password, settings={}):
         super(XmppClientBase, self).__init__(jid, password)
 
         if not settings:
             settings = {}
-
-        self.input_queue = input_queue
-        self.output_queue = output_queue
-        self.shares = shares
 
         self.settings = settings
         self.register_plugin('xep_0030')  # Service Discovery
@@ -89,8 +84,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self['xep_0163'].publish(MagnetLinksStanza(self.shares))
 
-        self.scheduler.add("", 2, self.process_queue,
-            repeat=True, qpointer=self.event_queue)
+        self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
 
     def process_queue(self):
         '''
@@ -98,14 +92,14 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         :return:
         '''
-        try:
-            msg = self.input_queue.get(False) #doesn't block
-            #logger.info("got msg from main: %s" % msg)
-            # schedule the reply
-            #scheduler.Task("SEND REPLY", 0, self.send_reply, (msg,)).run()
-        except Empty:
-            pass
-        pass
+        if self.s.has_messages():
+            topic, args, kwargs = self.s.get()
+            try:
+                f = getattr(self, 'on_%s' % topic)
+                f(*args, **kwargs)
+            except:
+                logger.error('something went wrong when calling on_%s' % topic)
+
 
     @staticmethod
     def on_magnet_links_publish(msg):
