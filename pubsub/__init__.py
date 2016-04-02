@@ -55,7 +55,7 @@ def publish(topic, *args, **kwargs):
     publish to a topic.
     """
 
-    t = get_topic(topic)
+    t = _get_topic(topic)
     logger.debug('got subscribers in topic: %s' % t['subscribers'])
     if not t['subscribers']:
         logger.error('published to topic with no subscribers')
@@ -66,16 +66,16 @@ def publish(topic, *args, **kwargs):
             s.put((topic, args, kwargs))
 
 
-def get_topic(topic):
+def _get_topic(topic):
     t = topics.get(topic, None)
     if not t:
-        topics[topic] = new_topic()
+        topics[topic] = _new_topic()
         logger.debug('new topic %s' % topic)
         t = topics[topic]
     return t
 
 
-def new_topic():
+def _new_topic():
     return {
         'subscribers': []
     }
@@ -87,7 +87,7 @@ class Subscriber:
         self.name = name
 
     def subscribe(self, topic):
-        t = get_topic(topic)
+        t = _get_topic(topic)
         with lock:
             if self not in t['subscribers']:
                 t['subscribers'].append(self)

@@ -7,6 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from pubsub import publish, Subscriber
+from core.rest import RestAPI
 
 
 def create_xmpp_client(jid, password):
@@ -55,6 +56,7 @@ class Sentinel(Thread, Subscriber):
 
     def run(self):
         self.add_bt_client()
+        RestAPI().start()
         logger.debug('starting loop')
         while True:
             # news?
