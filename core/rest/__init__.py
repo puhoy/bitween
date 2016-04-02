@@ -7,9 +7,9 @@ app = Flask(__name__)
 jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=True)
 
 
-@jsonrpc.method('App.index')
-def index():
-    return u'Welcome to Flask JSON-RPC'
+@jsonrpc.method('App.index', user='')
+def index(user='tester'):
+    return u'Welcome to Flask JSON-RPC, ' + user
 
 
 class RestAPI(Thread):

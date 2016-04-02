@@ -105,7 +105,7 @@ class Subscriber:
     def get(self):
         logger.debug('%s has messages' % self, )
         if self.has_messages():
-            (topic, args, kwargs) = self.queue.get(block=False)
+            (topic, args, kwargs) = self.queue.get(block=False, timeout=0.1)
             return topic, args, kwargs
         return False
 

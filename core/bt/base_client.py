@@ -12,6 +12,7 @@ import logging
 import log
 
 from pubsub import publish, Subscriber
+from types import FunctionType
 
 from .. import handlelist
 
@@ -63,8 +64,10 @@ class TorrentSession(Thread):
         publish('bt_ready')
 
         self.s = Subscriber()
-        for topic in ['generate_torrent']:
-            self.s.subscribe(topic)
+        listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
+        for l in listen_to:
+            self.s.subscribe(l)
+        self.s.name = 'bt'
 
 
     def setup_settings(self):

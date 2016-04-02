@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 from pubsub import publish, Subscriber
 from core.rest import RestAPI
+from types import FunctionType
 
 
 def create_xmpp_client(jid, password):
@@ -35,13 +36,15 @@ class Sentinel(Thread, Subscriber):
 
     files = handlelist
 
-    listen_to = ['bt_ready', 'add_file']
-
     def __init__(self):
         Thread.__init__(self)
         Subscriber.__init__(self)
         self.subscribe('sentinel')
-        for l in self.listen_to:
+        # all functions starting with on_
+        # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
+        listen_to = [x for x, y in Sentinel.__dict__.items() if
+                     (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
+        for l in listen_to:
             self.subscribe(l)
         self.name = 'sentinel'
 
