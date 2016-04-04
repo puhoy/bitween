@@ -66,7 +66,7 @@ class TorrentSession(Thread):
         self.s = Subscriber()
         listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
         for l in listen_to:
-            self.s.subscribe(l)
+            self.subscribe(l.split('on_')[1])
         self.s.name = 'bt'
 
 
@@ -362,7 +362,7 @@ class TorrentSession(Thread):
         lt.add_files(fs, os.path.abspath(folder))
         t = lt.create_torrent(fs)
         t.set_creator('libtorrent %s' % lt.version)
-        lt.set_piece_hashes(t, shared_folder)
+        lt.set_piece_hashes(t, os.path.abspath(os.path.join(folder, os.pardir)))  # file and the folder it is in
         torrent = t.generate()
         info = lt.torrent_info(torrent)
         self.on_add_torrent_by_info(info, save_path=shared_folder)

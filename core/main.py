@@ -45,7 +45,7 @@ class Sentinel(Thread, Subscriber):
         listen_to = [x for x, y in Sentinel.__dict__.items() if
                      (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
         for l in listen_to:
-            self.subscribe(l)
+            self.subscribe(l.split('on_')[1])
         self.name = 'sentinel'
 
     def _add_xmpp_client(self, jid: str, password: str) -> dict:
