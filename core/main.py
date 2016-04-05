@@ -1,12 +1,12 @@
-from .xmpp.base_client import XmppClientBase
-from .bt.base_client import TorrentSession
-
-from threading import Thread
 import logging
+from threading import Thread
+
+from .bt.base_client import TorrentSession
+from .xmpp.base_client import XmppClientBase
 
 logger = logging.getLogger(__name__)
 
-from pubsub import publish, Subscriber
+from core.pubsub import publish, Subscriber
 from core.rest import RestAPI
 from types import FunctionType
 
@@ -48,7 +48,7 @@ class Sentinel(Thread, Subscriber):
             self.subscribe(l.split('on_')[1])
         self.name = 'sentinel'
 
-    def _add_xmpp_client(self, jid: str, password: str) -> dict:
+    def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
         c = create_xmpp_client(jid=jid, password=password)
         self.xmpp_clients.append({'client': c})

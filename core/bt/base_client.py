@@ -1,19 +1,16 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import logging
 import os
-
-import libtorrent as lt
 import sqlite3
-
 import time
-
 from threading import Thread
-
-import logging
-import log
-
-from pubsub import publish, Subscriber
 from types import FunctionType
 
+import libtorrent as lt
+
+from core.pubsub import publish, Subscriber
 from .. import handlelist
 
 logger = logging.getLogger(__name__)
@@ -25,13 +22,14 @@ class TorrentSession(Thread):
     """
 
     def __init__(self):
-        super().__init__()
+        super(TorrentSession, self).__init__()
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
         self.state_str = ['queued', 'checking', 'downloading metadata', \
                           'downloading', 'finished', 'seeding', 'allocating', 'checking fastresume']
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
+        logger.info('libtorrent %s' % lt.version)
 
         self.handles = handlelist
 
@@ -64,9 +62,9 @@ class TorrentSession(Thread):
         publish('bt_ready')
 
         self.s = Subscriber()
-        listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
+        listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
-            self.subscribe(l.split('on_')[1])
+            self.s.subscribe(l.split('on_')[1])
         self.s.name = 'bt'
 
 
@@ -128,7 +126,7 @@ class TorrentSession(Thread):
 
     def __del__(self):
         logger.info("torrentsession exits!")
-        self.exit(0)
+        # exit(0)
 
     def safe_shutdown(self):
         """
@@ -140,14 +138,13 @@ class TorrentSession(Thread):
         self.end = True
 
     def handle_queue(self):
-        logger.debug('starting handle queue processing')
         if self.s.has_messages():
             topic, args, kwargs = self.s.get()
             try:
                 f = getattr(self, 'on_%s' % topic)
                 f(*args, **kwargs)
-            except:
-                logger.error('something went wrong when calling on_%s' % topic)
+            except Exception as e:
+                logger.error('something went wrong when calling on_%s: %s' % (topic, e))
             '''
             elif d.get('pauseTorrent'):
                 handle = d.get('pauseTorrent')
@@ -243,7 +240,7 @@ class TorrentSession(Thread):
             self.handle_queue()
 
             sessionstat = self.session.status()
-            logger.debug(sessionstat)
+            #logger.debug(sessionstat)
 
             #self.statusbar.emit("%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status))
@@ -353,19 +350,27 @@ class TorrentSession(Thread):
         '''
         generates a handle for a file or folder
         '''
-        logging.info('generating a new torrent for %s' % os.path.abspath(folder))
-        shared_folder = 'shared'
+        logging.info('generating a new torrent for %s in %s' % (os.path.abspath(folder), os.path.abspath(os.path.join(os.path.abspath(folder), os.pardir))))
+
+        #shared_folder = 'shared'
         #for root, dirs, files in os.walk(shared_folder):
         #    for file in files:
 
         fs = lt.file_storage()
         lt.add_files(fs, os.path.abspath(folder))
         t = lt.create_torrent(fs)
-        t.set_creator('libtorrent %s' % lt.version)
-        lt.set_piece_hashes(t, os.path.abspath(os.path.join(folder, os.pardir)))  # file and the folder it is in
+        t.set_creator('bitween') #%s' % lt.version)
+        lt.set_piece_hashes(t,
+                            os.path.abspath(os.path.join(
+                                folder,
+                                os.pardir)))  # file and the folder it is in
+        logger.debug('...')
         torrent = t.generate()
+        logger.debug('generated')
         info = lt.torrent_info(torrent)
-        self.on_add_torrent_by_info(info, save_path=shared_folder)
+        self.on_add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
+                                folder,
+                                os.pardir)))
 
 
     def on_del_torrent(self, handle):
@@ -440,7 +445,7 @@ class TorrentSession(Thread):
             fastresumedata = t[2]
             save_path = t[3]
             torrentinfo = lt.torrent_info(entry)
-            self.add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
+            self.on_add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
         db.close()
         pass
 

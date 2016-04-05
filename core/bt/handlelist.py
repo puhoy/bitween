@@ -1,12 +1,15 @@
 from threading import Lock
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class HandleList:
     """
     holds a reference to the handles and some values for other threads
     """
 
-    def __init__(self, handles: list):
+    def __init__(self, handles):
         self.list = []
         self.lock = Lock()
         self.rebuild(handles)
@@ -17,19 +20,21 @@ class HandleList:
             self.add(handle)
 
     def add(self, handle):
+        logger.debug('added file %s', handle.name())
         with self.lock:
+            info = handle.torrent_file()
             h = {
-                    'handle': handle,  # functions from handle should not be called outside of the bt thread.
-                    'files': [],
-                    'total_size': handle.total_size(),
-                    'name': handle.name()
-                }
-            files = handle.files()  # the filestore object
-            for f in range(0, files.num_files()):
+                'handle': handle,  # functions from handle should not be called outside of the bt thread.
+                'files': [],
+                'total_size': info.total_size(),
+                'name': info.name()
+            }
+            files = info.files()  # the filestore object
+            for f in files:
                 h['files'].append(
                     {
-                        'name': files.file_name(f),  # filename for file at index f
-                        'size': files.file_size(f)
+                        'path': f.path,  # filename for file at index f
+                        #'size': files.file_size(f)
                     })
             self.list.append(h)
 
@@ -58,4 +63,3 @@ class HandleList:
     def __iter__(self):
         for x in self.list:
             yield x
-

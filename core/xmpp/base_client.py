@@ -2,21 +2,19 @@ __author__ = 'meatpuppet'
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
+import xml.etree.cElementTree as et
 
 import sleekxmpp
-import xml.etree.cElementTree as et
 from sleekxmpp.xmlstream import tostring
-import asyncio
+#import asyncio
+from types import FunctionType
 
-from .. import handlelist
-
-from pubsub import Subscriber
+from core.pubsub import Subscriber
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-from queue import Empty
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -56,7 +54,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
-            self.subscribe(l.split('on_')[1])
+            self.s.subscribe(l.split('on_')[1])
         self.s.name = 'xmpp_client_%s' % self.jid.full
 
     def start(self, event):
@@ -88,7 +86,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
 
-        #self['xep_0163'].publish(MagnetLinksStanza(self.shares))
+        # self['xep_0163'].publish(MagnetLinksStanza(self.shares))
 
         self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
 
@@ -105,7 +103,6 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
                 f(*args, **kwargs)
             except:
                 logger.error('something went wrong when calling on_%s' % topic)
-
 
     @staticmethod
     def on_magnet_links_publish(msg):
@@ -124,7 +121,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
     ##
     #  async commands
     ##
-    @asyncio.coroutine
+    #@asyncio.coroutine
     def add_mlinks(self, mlinks):
         """
 
@@ -133,7 +130,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         """
         pass
 
-    @asyncio.coroutine
+    #@asyncio.coroutine
     def del_mlinks(self, mlinks):
         pass
 
