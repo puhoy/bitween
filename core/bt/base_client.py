@@ -128,6 +128,9 @@ class TorrentSession(Thread):
         logger.info("torrentsession exits!")
         # exit(0)
 
+    def on_exit(self):
+        self.safe_shutdown()
+
     def safe_shutdown(self):
         """
         sets the end variable which tells the run method to jump out

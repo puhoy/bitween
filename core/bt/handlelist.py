@@ -36,6 +36,7 @@ class HandleList:
                         'path': f.path,  # filename for file at index f
                         #'size': files.file_size(f)
                     })
+            logger.info('new files: %s' % h)
             self.list.append(h)
 
     def get(self, handle):

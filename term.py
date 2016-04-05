@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 def start():
     s = Sentinel()
     s.start()
+    s.join()
 
 
 if __name__ == "__main__":

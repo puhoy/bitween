@@ -48,6 +48,10 @@ class Sentinel(Thread, Subscriber):
             self.subscribe(l.split('on_')[1])
         self.name = 'sentinel'
 
+        self.api = RestAPI()
+
+        self.end = False
+
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
         c = create_xmpp_client(jid=jid, password=password)
@@ -59,9 +63,9 @@ class Sentinel(Thread, Subscriber):
 
     def run(self):
         self.add_bt_client()
-        RestAPI().start()
+        self.api.start()
         logger.debug('starting loop')
-        while True:
+        while not self.end:
             # news?
             if self.has_messages():
                 (topic, args, kwargs) = self.get()
@@ -70,6 +74,7 @@ class Sentinel(Thread, Subscriber):
                     f(*args, **kwargs)
                 except:
                     logger.error('something went wrong when calling on_%s' % topic)
+        logging.info('quitting')
 
     def on_bt_ready(self):
         """
@@ -89,3 +94,13 @@ class Sentinel(Thread, Subscriber):
         """
         publish('magnet_links_publish')  # call method on xmpp clients
         pass
+
+    def on_exit(self):
+        for c in self.xmpp_clients:
+            c['client'].join()
+        self.bt_client['client'].join()
+
+        self.api.join()
+
+        self.end = True
+

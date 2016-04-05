@@ -120,10 +120,11 @@ class Subscriber:
 
     def __del__(self):
         with lock:
-            for t in topics:
-                if self in t['subscribers']:
-                    t['subscribers'].remove(self)
-                    logger.debug('removed self from %s while deleting' % t)
+            if topics:
+                for t in topics:
+                    if self in t['subscribers']:
+                        t['subscribers'].remove(self)
+                        logger.debug('removed self from %s while deleting' % t)
 
     def __repr__(self):
         return self.name
