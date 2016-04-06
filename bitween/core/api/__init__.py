@@ -3,8 +3,6 @@ from threading import Thread
 from flask import Flask, request
 from flask_jsonrpc import JSONRPC
 
-from core.pubsub import publish
-
 app = Flask(__name__)
 jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=True)
 
@@ -25,9 +23,9 @@ def safe_exit():
     func()
 
 
-class RestAPI(Thread):
+class JsonRpcAPI(Thread):
     def __init__(self):
-        super(RestAPI, self).__init__()
+        super(JsonRpcAPI, self).__init__()
 
     def run(self):
         app.run(host='0.0.0.0')

@@ -10,7 +10,7 @@ from types import FunctionType
 
 import libtorrent as lt
 
-from core.pubsub import publish, Subscriber
+from bitween.pubsub import publish, Subscriber
 from .. import handlelist
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,6 @@ class TorrentSession(Thread):
         for l in listen_to:
             self.s.subscribe(l.split('on_')[1])
         self.s.name = 'bt'
-
 
     def setup_settings(self):
         """
@@ -225,7 +224,7 @@ class TorrentSession(Thread):
         were done and the thread will exit.
         """
         # self.statusbar.emit(self.status)
-        #self.output_queue.put({'status': self.status})
+        # self.output_queue.put({'status': self.status})
         # self.setup_blocklist()
         self.resume()
 
@@ -243,19 +242,19 @@ class TorrentSession(Thread):
             self.handle_queue()
 
             sessionstat = self.session.status()
-            #logger.debug(sessionstat)
+            # logger.debug(sessionstat)
 
-            #self.statusbar.emit("%.2f up, %.2f down @ %s peers - %s" % (
+            # self.statusbar.emit("%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status))
 
-            #self.output_queue({'status': "%.2f up, %.2f down @ %s peers - %s" % (
+            # self.output_queue({'status': "%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status)})
 
             for handle in self.handles.list:
                 stat = handle['handle'].status()
                 logger.debug("%s - Progress: %s; Peers: %s; State: %s" %
-                              (handle['handle'].name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
-                #self.torrent_updated.emit(handle, handle.status())
+                             (handle['handle'].name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
+                # self.torrent_updated.emit(handle, handle.status())
 
             for alert in self.session.pop_alerts():
                 # print("%s" % (alert.what()))
@@ -301,6 +300,12 @@ class TorrentSession(Thread):
         logger.debug("handles at return: %s" % self.handles.list)
         return
 
+    def on_add_peer(self, handle, peer_address):
+        # info = handle.torrent_file()
+        # info.name()
+        logger.info('adding peer %s to handle %s' % (peer_address, handle.name()))
+        handle.connect_peer(peer_address)
+
     def on_add_magnetlink(self, magnetlink, save_path):
         """
         creates a handle for a magnetlink and adds it to the session
@@ -313,7 +318,7 @@ class TorrentSession(Thread):
         handle = lt.add_magnet_uri(self.session, magnetlink, {'save_path': save_path})
         self.handles.add(handle)
         publish('new_handle')
-        #self.torrent_added.emit(handle)
+        # self.torrent_added.emit(handle)
 
     def on_add_torrent(self, torrentfilepath, save_path):
         """
@@ -347,22 +352,23 @@ class TorrentSession(Thread):
 
         self.handles.add(handle)
         publish('new_handle')
-        #self.torrent_added.emit(handle)
+        # self.torrent_added.emit(handle)
 
     def on_generate_torrent(self, folder):
         '''
         generates a handle for a file or folder
         '''
-        logging.info('generating a new torrent for %s in %s' % (os.path.abspath(folder), os.path.abspath(os.path.join(os.path.abspath(folder), os.pardir))))
+        logging.info('generating a new torrent for %s in %s' % (
+        os.path.abspath(folder), os.path.abspath(os.path.join(os.path.abspath(folder), os.pardir))))
 
-        #shared_folder = 'shared'
-        #for root, dirs, files in os.walk(shared_folder):
+        # shared_folder = 'shared'
+        # for root, dirs, files in os.walk(shared_folder):
         #    for file in files:
 
         fs = lt.file_storage()
         lt.add_files(fs, os.path.abspath(folder))
         t = lt.create_torrent(fs)
-        t.set_creator('bitween') #%s' % lt.version)
+        t.set_creator('bitween')  # %s' % lt.version)
         lt.set_piece_hashes(t,
                             os.path.abspath(os.path.join(
                                 folder,
@@ -372,16 +378,15 @@ class TorrentSession(Thread):
         logger.debug('generated')
         info = lt.torrent_info(torrent)
         self.on_add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
-                                folder,
-                                os.pardir)))
-
+            folder,
+            os.pardir)))
 
     def on_del_torrent(self, handle):
         """saves the resume data for torrent
         when done, save_resume_data_alert will be thrown, then its safe to really delete the torrent
         """
         handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)  # creates save_resume_data_alert
-        #self.torrent_deleted.emit(handle)
+        # self.torrent_deleted.emit(handle)
 
     def save(self, handle, resume_data):
         """
@@ -436,7 +441,7 @@ class TorrentSession(Thread):
         f = erg.fetchone()
         if f:
             encsettings = f[1]
-            settings = lt.bdecode(encsettings)
+            settings = lt.bdecode(bytes(encsettings))
             self.session.load_state(settings)
             logger.info("loaded settings: %s" % settings)
 

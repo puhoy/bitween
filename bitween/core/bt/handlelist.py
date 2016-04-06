@@ -27,7 +27,9 @@ class HandleList:
                 'handle': handle,  # functions from handle should not be called outside of the bt thread.
                 'files': [],
                 'total_size': info.total_size(),
-                'name': info.name()
+                'name': info.name(),
+                'hash': info.info_hash(),
+                'mlink': make_magnet_uri(info)
             }
             files = info.files()  # the filestore object
             for f in files:
@@ -62,5 +64,6 @@ class HandleList:
         del self.list[key]
 
     def __iter__(self):
-        for x in self.list:
-            yield x
+        with self.lock:
+            for x in self.list:
+                yield x

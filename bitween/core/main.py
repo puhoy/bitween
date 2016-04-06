@@ -6,8 +6,8 @@ from .xmpp.base_client import XmppClientBase
 
 logger = logging.getLogger(__name__)
 
-from core.pubsub import publish, Subscriber
-from core.rest import RestAPI
+from bitween.pubsub import publish, Subscriber
+from bitween.core.api import JsonRpcAPI
 from types import FunctionType
 
 
@@ -48,7 +48,7 @@ class Sentinel(Thread, Subscriber):
             self.subscribe(l.split('on_')[1])
         self.name = 'sentinel'
 
-        self.api = RestAPI()
+        self.api = JsonRpcAPI()
 
         self.end = False
 

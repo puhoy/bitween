@@ -1,9 +1,13 @@
 import json
-from core.bt.handlelist import HandleList
+import os
+
+from bitween.core.bt.handlelist import HandleList
 
 with open('conf.json') as f:
     conf = json.load(f)
 
+if not os.path.isdir(conf['save_path']):
+    os.mkdir(conf['save_path'])
 
 """
 http://stackoverflow.com/questions/6319207/are-lists-thread-safe

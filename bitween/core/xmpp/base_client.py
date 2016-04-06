@@ -2,14 +2,14 @@ __author__ = 'meatpuppet'
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-import xml.etree.cElementTree as et
 
 import sleekxmpp
 from sleekxmpp.xmlstream import tostring
+
 #import asyncio
 from types import FunctionType
 
-from core.pubsub import Subscriber
+from bitween.pubsub import publish, Subscriber
 
 import logging
 
@@ -21,17 +21,6 @@ if sys.version_info < (3, 0):
     sys.setdefaultencoding('utf8')
 else:
     raw_input = input
-
-
-class MagnetLinksStanza(object):
-    def __init__(self, magnetlinks):
-        root = et.Element("magnet_links")
-        for l in magnetlinks:
-            link = et.Element("link")
-            link.text = l
-            root.append(link)
-        self.xml = root
-        self.namespace = 'https://xmpp.kwoh.de/protocol/magnet_links'
 
 
 class XmppClientBase(sleekxmpp.ClientXMPP):

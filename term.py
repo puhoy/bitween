@@ -1,11 +1,8 @@
-from argh import ArghParser
-from argh.decorators import aliases, arg
-from getpass import getpass
-
-from core.main import Sentinel
-
 import logging
-import log
+
+from argh import ArghParser
+
+from bitween.core.main import Sentinel
 
 logger = logging.getLogger(__name__)
 
