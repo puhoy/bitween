@@ -7,9 +7,11 @@ if sys.version_info < (3, 0):
     reload(sys)
     sys.setdefaultencoding('utf8')
     import Queue as queue
+    from Queue import Empty
 else:
     raw_input = input
     import queue
+    from queue import Empty
 
 
 logger = logging.getLogger(__name__)
@@ -79,7 +81,7 @@ def _get_topic(topic):
     t = topics.get(topic, None)
     if not t:
         topics[topic] = _new_topic()
-        logger.debug('new topic %s' % topic)
+        logger.debug('new topic %s' % (topic))
         t = topics[topic]
     return t
 
@@ -99,6 +101,7 @@ class Subscriber:
         t = _get_topic(topic)
         with lock:
             if self not in t['subscribers']:
+                logger.debug('%s subscribed to %s' % (self.name, topic))
                 t['subscribers'].append(self)
                 return True
             else:
@@ -108,15 +111,15 @@ class Subscriber:
     def put(self, topic, *args, **kwargs):
         self.queue.put(topic, *args, **kwargs)
 
-    def has_messages(self):
+    def has_messages(self, timeout=None):
         return self.queue.qsize() != 0
 
-    def get(self):
-        logger.debug('%s has messages' % self, )
-        if self.has_messages():
-            (topic, args, kwargs) = self.queue.get(block=False, timeout=0.1)
+    def get(self, timeout=0.1):
+        try:
+            (topic, args, kwargs) = self.queue.get(block=True, timeout=timeout)
             return topic, args, kwargs
-        return False
+        except Empty:
+            return False
 
     def __del__(self):
         with lock:

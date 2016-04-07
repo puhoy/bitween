@@ -39,6 +39,7 @@ class Sentinel(Thread, Subscriber):
     def __init__(self):
         Thread.__init__(self)
         Subscriber.__init__(self)
+        self.name = 'sentinel'
         self.subscribe('sentinel')
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
@@ -46,7 +47,6 @@ class Sentinel(Thread, Subscriber):
                      (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
         for l in listen_to:
             self.subscribe(l.split('on_')[1])
-        self.name = 'sentinel'
 
         self.api = JsonRpcAPI()
 
@@ -67,22 +67,29 @@ class Sentinel(Thread, Subscriber):
         logger.debug('starting loop')
         while not self.end:
             # news?
-            if self.has_messages():
-                (topic, args, kwargs) = self.get()
+            ret = self.get()
+            if ret:
+                (topic, args, kwargs) = ret
                 try:
                     f = getattr(self, 'on_%s' % topic)
                     f(*args, **kwargs)
                 except:
                     logger.error('something went wrong when calling on_%s' % topic)
+
+
         logging.info('quitting')
 
     def on_bt_ready(self):
         """
 
+        :return:
         """
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
             # self.in_queue.put(['add_file', 'shared/df'])
+
+        self.api.end()
+
 
     def on_add_file(self, file):
         logger.debug('adding file')

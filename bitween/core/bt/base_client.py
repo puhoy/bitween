@@ -10,8 +10,10 @@ from types import FunctionType
 
 import libtorrent as lt
 
+from tools import profile
+
 from bitween.pubsub import publish, Subscriber
-from .. import handlelist
+from .. import handlelist, HandleList
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class TorrentSession(Thread):
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
         logger.info('libtorrent %s' % lt.version)
 
-        self.handles = handlelist
+        self.handles = []
 
         # self.session.set_alert_mask(lt.alert.category_t.storage_notification)
 
@@ -213,6 +215,7 @@ class TorrentSession(Thread):
     #     self.session.set_ip_filter(filter)
     #     self.statusbar.emit("%s" % self.status)
 
+    #@profile('bt_run.png')
     def run(self):
         """
         the run method of the thread.
@@ -250,10 +253,10 @@ class TorrentSession(Thread):
             # self.output_queue({'status': "%.2f up, %.2f down @ %s peers - %s" % (
             #    sessionstat.upload_rate / 1024, sessionstat.download_rate / 1024, sessionstat.num_peers, self.status)})
 
-            for handle in self.handles.list:
-                stat = handle['handle'].status()
+            for handle in self.handles:
+                stat = handle.status()
                 logger.debug("%s - Progress: %s; Peers: %s; State: %s" %
-                             (handle['handle'].name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
+                             (handle.name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
                 # self.torrent_updated.emit(handle, handle.status())
 
             for alert in self.session.pop_alerts():
@@ -265,8 +268,9 @@ class TorrentSession(Thread):
                     handle = alert.handle
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
-                    self.session.remove_torrent(handle['handle'])
-                    self.handles.remove(handle['handle'])
+                    self.session.remove_torrent(handle)
+                    self.handles.remove(handle)
+                    handlelist.rebuild(self.handles)
             time.sleep(1)
 
         logger.debug("ending")
@@ -274,30 +278,35 @@ class TorrentSession(Thread):
         # erase previous torrents first
         self.erase_all_torrents_from_db()
         # then trigger saving resume data
-        for handle in self.handles.list:
-            handle['handle'].save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
+        for handle in self.handles:
+            handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
         # set alert mast to get the right alerts
         self.session.set_alert_mask(lt.alert.category_t.storage_notification)
         # wait for everything to save and finish!
-        while self.handles.list:
+        while self.handles:
+            #logger.debug(self.handles.list)
             for alert in self.session.pop_alerts():
-                logger.debug("- %s %s" % (alert.what(), alert.message()))
+                #logger.debug("- %s %s" % (alert.what(), alert.message()))
                 if (alert.what() == "save_resume_data_alert"):
                     handle = alert.handle
                     self.save(handle, alert.resume_data)
-                    logger.debug("removing %s" % handle.name())
+                    logger.debug("removing %s at %s" % (handle.name(), handle))
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
+                    handlelist.rebuild(self.handles)
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                     logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
+                    handlelist.rebuild(self.handles)
+                else:
+                    logger.info('got %s: %s' % (alert.what(), alert.message()))
 
         self.save_state()
         time.sleep(1)
-        logger.debug("handles at return: %s" % self.handles.list)
+        logger.debug("handles at return: %s" % self.handles)
         return
 
     def on_add_peer(self, handle, peer_address):
@@ -316,7 +325,8 @@ class TorrentSession(Thread):
         """
         logger.info("adding mlink")
         handle = lt.add_magnet_uri(self.session, magnetlink, {'save_path': save_path})
-        self.handles.add(handle)
+        self.handles.append(handle)
+        handlelist.rebuild(self.handles)
         publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -350,8 +360,9 @@ class TorrentSession(Thread):
             logger.debug('resuming')
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
-        self.handles.add(handle)
-        publish('new_handle')
+        self.handles.append(handle)
+        handlelist.rebuild(self.handles)
+        publish('new_handle at %s' % handle)
         # self.torrent_added.emit(handle)
 
     def on_generate_torrent(self, folder):
@@ -397,6 +408,7 @@ class TorrentSession(Thread):
         :param resume_data:
         :return:
         """
+        logger.debug('saving handle %s' % handle.torrent_file().name())
         save_path = handle.save_path()
         torrent = lt.create_torrent(handle.get_torrent_info())
         torfile = lt.bencode(torrent.generate())
@@ -418,6 +430,7 @@ class TorrentSession(Thread):
         :return:
         """
         # create table sessionstatus (status blob)
+        logger.debug('saving state')
         entry = self.session.save_state()
         encentry = lt.bencode(entry)
         db = sqlite3.connect(self.statdb)
@@ -449,8 +462,8 @@ class TorrentSession(Thread):
         erg = c.execute("SELECT * FROM torrents")
         for t in erg.fetchall():
             logger.info("importing %s" % t[0])
-            entry = lt.bdecode(t[1])
-            fastresumedata = t[2]
+            entry = lt.bdecode(bytes(t[1]))
+            fastresumedata = bytes(t[2])
             save_path = t[3]
             torrentinfo = lt.torrent_info(entry)
             self.on_add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)

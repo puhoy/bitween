@@ -38,7 +38,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self.add_event_handler("session_start", self.start)
 
-        self.s = Subscriber()
+        self.s = Subscriber(__name__)
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]

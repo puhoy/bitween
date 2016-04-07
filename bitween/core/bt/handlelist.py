@@ -3,6 +3,7 @@ from threading import Lock
 import logging
 logger = logging.getLogger(__name__)
 
+from libtorrent import make_magnet_uri
 
 class HandleList:
     """
@@ -24,7 +25,7 @@ class HandleList:
         with self.lock:
             info = handle.torrent_file()
             h = {
-                'handle': handle,  # functions from handle should not be called outside of the bt thread.
+                'handle': '%s' % handle,
                 'files': [],
                 'total_size': info.total_size(),
                 'name': info.name(),
@@ -48,11 +49,15 @@ class HandleList:
                     return h
 
     def remove(self, handle):
+        logger.debug('removing handle')
         with self.lock:
             for h in self.list:
-                if h['handle'] is handle:
-                    self.list.remove(h)
+                if h['handle'] is '%s' % handle:
+                    del h
                     return
+                else:
+                    logger.debug('%s is not %s' % (h['handle'], '%s' % handle))
+            logger.debug('handle not found!')
 
     def __getitem__(self, key):
         return self.list[key]

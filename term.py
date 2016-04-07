@@ -1,9 +1,12 @@
+from bitween.log import setup_logging
 import logging
 
 from argh import ArghParser
 
 from bitween.core.main import Sentinel
 
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
