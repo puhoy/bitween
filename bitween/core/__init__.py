@@ -1,7 +1,7 @@
 import json
 import os
 
-from bitween.core.bt.handlelist import HandleList
+from bitween.core.handlelist import HandleList
 
 with open('conf.json') as f:
     conf = json.load(f)

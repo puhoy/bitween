@@ -16,6 +16,7 @@ class HandleList:
         self.rebuild(handles)
 
     def rebuild(self, handles):
+        logger.debug(self.list)
         self.list = []
         for handle in handles:
             self.add(handle)
@@ -24,15 +25,25 @@ class HandleList:
         logger.debug('added file %s', handle.name())
         with self.lock:
             info = handle.torrent_file()
-            h = {
-                'handle': '%s' % handle,
-                'files': [],
-                'total_size': info.total_size(),
-                'name': info.name(),
-                'hash': info.info_hash(),
-                'mlink': make_magnet_uri(info)
-            }
-            files = info.files()  # the filestore object
+            h = {}
+
+            h['handle']= '%s' % handle
+            h['files']= []
+            try:
+                h['total_size']= info.total_size()
+                h['name']= info.name()
+                h['hash']= '%s' % info.info_hash()
+                h['mlink']= '%s' % make_magnet_uri(info)
+            except:
+                h['total_size']= 0
+                h['name']= ''
+                h['hash']= ''
+                h['mlink']= ''
+            try:
+                files = info.files()  # the filestore object
+            except:
+                files = []
+
             for f in files:
                 h['files'].append(
                     {

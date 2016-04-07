@@ -35,6 +35,8 @@ class TorrentSession(Thread):
 
         self.handles = []
 
+        self.session.listen_on(6881, 6891)
+
         # self.session.set_alert_mask(lt.alert.category_t.storage_notification)
 
         """-----alert categories-----
@@ -60,6 +62,9 @@ class TorrentSession(Thread):
 
         self.setup_settings()
         self.setup_db()
+
+        #logger.info('listening on port %s' % self.session.listen_port())
+        #logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
         publish('bt_ready')
 
@@ -94,19 +99,19 @@ class TorrentSession(Thread):
         self.session.set_settings(session_settings)
 
         # extensions
-        # self.session.add_extension(lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
-        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
-        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
-        # self.session.add_extension(lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
+        self.session.add_extension(lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
+        self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
+        self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
+        self.session.add_extension(lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
 
-        # self.session.start_dht()
-        # self.session.start_lsd()
-        # self.session.start_upnp()
-        # self.session.start_natpmp()
-        self.session.stop_dht()
-        self.session.stop_lsd()
-        self.session.stop_natpmp()
-        self.session.stop_upnp()
+        self.session.start_dht()
+        self.session.start_lsd()
+        self.session.start_upnp()
+        self.session.start_natpmp()
+        #self.session.stop_dht()
+        #self.session.stop_lsd()
+        #self.session.stop_natpmp()
+        #self.session.stop_upnp()
 
     def setup_db(self):
         """
@@ -231,7 +236,6 @@ class TorrentSession(Thread):
         # self.setup_blocklist()
         self.resume()
 
-        self.session.listen_on(6881, 6891)
         self.status = "running"
         """
         print("settings:")
@@ -255,22 +259,26 @@ class TorrentSession(Thread):
 
             for handle in self.handles:
                 stat = handle.status()
-                logger.debug("%s - Progress: %s; Peers: %s; State: %s" %
-                             (handle.name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
+                #logger.debug("%s - Progress: %s; Peers: %s; State: %s" %
+                #             (handle.name(), stat.progress * 100, stat.num_peers, self.state_str[stat.state]))
                 # self.torrent_updated.emit(handle, handle.status())
 
             for alert in self.session.pop_alerts():
-                # print("%s" % (alert.what()))
 
-                # print("%s" % alert.message())
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
+                elif alert.what() == "torrent_update_alert":
+                    handlelist.rebuild(self.handles)
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
                     handlelist.rebuild(self.handles)
+                elif (alert.what() == "stats_alert"):
+                    pass
+                else:
+                    logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
             time.sleep(1)
 
         logger.debug("ending")
@@ -301,6 +309,8 @@ class TorrentSession(Thread):
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
                     handlelist.rebuild(self.handles)
+                elif (alert.what() == "stats_alert"):
+                    pass
                 else:
                     logger.info('got %s: %s' % (alert.what(), alert.message()))
 
@@ -309,11 +319,11 @@ class TorrentSession(Thread):
         logger.debug("handles at return: %s" % self.handles)
         return
 
-    def on_add_peer(self, handle, peer_address):
+    def on_add_peer(self, handle, peer_address, peer_port):
         # info = handle.torrent_file()
         # info.name()
         logger.info('adding peer %s to handle %s' % (peer_address, handle.name()))
-        handle.connect_peer(peer_address)
+        handle.connect_peer((peer_address, peer_port))
 
     def on_add_magnetlink(self, magnetlink, save_path):
         """
