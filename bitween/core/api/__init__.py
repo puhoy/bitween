@@ -3,6 +3,10 @@ from threading import Thread
 from flask import Flask, request
 from flask_jsonrpc import JSONRPC
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=True)
 
@@ -14,7 +18,17 @@ from .bt import *
 from .xmpp import *
 
 
-@jsonrpc.method('main.exit')
+@jsonrpc.method('Api.versions')
+def versions():
+    import libtorrent
+    import sleekxmpp
+    versions = {"libtorrent": '' + libtorrent.version,
+                "sleekxmpp": '' + sleekxmpp.__version__}
+    logger.debug(versions)
+    return versions
+
+
+@jsonrpc.method('Api.exit')
 def safe_exit():
     publish('exit')
     func = request.environ.get('werkzeug.server.shutdown')

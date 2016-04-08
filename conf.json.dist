@@ -4,5 +4,6 @@
       "jid": "user@domain",
       "password": ""
     }
-  ]
+  ],
+  "save_path": "share"
 }

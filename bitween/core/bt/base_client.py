@@ -10,7 +10,6 @@ from types import FunctionType
 
 import libtorrent as lt
 
-from tools import profile
 
 from bitween.pubsub import publish, Subscriber
 from .. import handlelist, HandleList
