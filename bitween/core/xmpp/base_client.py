@@ -38,13 +38,14 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self.add_event_handler("session_start", self.start)
 
-        self.s = Subscriber(__name__)
+        self.s = Subscriber()
+        self.s.name = 'xmpp_client_%s' % self.jid.full
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
             self.s.subscribe(l.split('on_')[1])
-        self.s.name = 'xmpp_client_%s' % self.jid.full
+
 
     def start(self, event):
         """
@@ -66,7 +67,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
         self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
         self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
-        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        # self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
         ## Generic pubsub event handlers for all nodes
         #

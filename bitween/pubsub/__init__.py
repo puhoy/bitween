@@ -69,7 +69,7 @@ def publish(topic, *args, **kwargs):
     t = _get_topic(topic)
     logger.debug('got subscribers in topic: %s' % t['subscribers'])
     if not t['subscribers']:
-        logger.error('published to topic with no subscribers')
+        logger.error('published to topic %s with no subscribers' % topic)
         return False
     with lock:
         for s in t['subscribers']:

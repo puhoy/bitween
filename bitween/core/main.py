@@ -76,7 +76,6 @@ class Sentinel(Thread, Subscriber):
                 except:
                     logger.error('something went wrong when calling on_%s' % topic)
 
-
         logging.info('quitting')
 
     def on_bt_ready(self):
@@ -87,9 +86,6 @@ class Sentinel(Thread, Subscriber):
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
             # self.in_queue.put(['add_file', 'shared/df'])
-
-        self.api.end()
-
 
     def on_add_file(self, file):
         logger.debug('adding file')
@@ -110,4 +106,3 @@ class Sentinel(Thread, Subscriber):
         self.api.join()
 
         self.end = True
-

@@ -1,9 +1,11 @@
 from threading import Lock
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from libtorrent import make_magnet_uri
+
 
 class HandleList:
     """
@@ -27,18 +29,26 @@ class HandleList:
             info = handle.torrent_file()
             h = {}
 
-            h['handle']= '%s' % handle
-            h['files']= []
+            h['handle'] = '%s' % handle
+            h['files'] = []
+
             try:
-                h['total_size']= info.total_size()
-                h['name']= info.name()
-                h['hash']= '%s' % info.info_hash()
-                h['mlink']= '%s' % make_magnet_uri(info)
+                h['total_size'] = info.total_size()
             except:
-                h['total_size']= 0
-                h['name']= ''
-                h['hash']= ''
-                h['mlink']= ''
+                h['total_size'] = 0
+            try:
+                h['name'] = handle.name()
+            except:
+                h['name'] = ''
+            try:
+                h['hash'] = '%s' % handle.info_hash()
+            except:
+                h['hash'] = ''
+            try:
+                h['mlink'] = '%s' % make_magnet_uri(handle)
+            except:
+                h['mlink'] = ''
+
             try:
                 files = info.files()  # the filestore object
             except:
@@ -48,7 +58,7 @@ class HandleList:
                 h['files'].append(
                     {
                         'path': f.path,  # filename for file at index f
-                        #'size': files.file_size(f)
+                        # 'size': files.file_size(f)
                     })
             logger.info('new files: %s' % h)
             self.list.append(h)
