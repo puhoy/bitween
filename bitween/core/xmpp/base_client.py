@@ -67,7 +67,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
         self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
         self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
-        # self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
         ## Generic pubsub event handlers for all nodes
         #
@@ -97,16 +97,15 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
     @staticmethod
     def on_magnet_links_publish(msg):
         """ handle incoming files """
-        print('Published item %s to %s:' % (
+        logging.debug('Published item %s to %s:' % (
             msg['pubsub_event']['items']['item']['id'],
             msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
         if data is not None:
             for d in data:
-                print(d.text)
-                print(tostring(d))
+                logger.debug('got %s' % d)
         else:
-            print('No item content')
+            logger.debug('No item content')
 
     ##
     #  async commands

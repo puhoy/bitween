@@ -10,6 +10,8 @@ from libtorrent import make_magnet_uri
 class HandleList:
     """
     holds a reference to the handles and some values for other threads
+
+    this is managed by the bt thread
     """
 
     def __init__(self, handles):

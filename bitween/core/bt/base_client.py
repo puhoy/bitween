@@ -13,6 +13,9 @@ import libtorrent as lt
 from bitween.pubsub import publish, Subscriber
 from .. import handlelist, HandleList
 
+
+from tools import profile
+
 logger = logging.getLogger(__name__)
 
 
@@ -220,7 +223,7 @@ class TorrentSession(Thread):
     #     self.session.set_ip_filter(filter)
     #     self.statusbar.emit("%s" % self.status)
 
-    # @profile('bt_run.png')
+    @profile('bt_run.png')
     def run(self):
         """
         the run method of the thread.
