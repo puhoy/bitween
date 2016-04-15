@@ -25,7 +25,7 @@ class ContactList:
 
 class Contact:
     def __init__(self, jid='', ip_v4='', ip_v6=''):
-        self.jid = jid
+        self.jid = str(jid)
         self.ip_v4 = ip_v4
         self.ip_v6 = ip_v6
 

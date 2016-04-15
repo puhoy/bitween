@@ -41,8 +41,10 @@ class Torrent:
 
 
 class TorrentList:
+    """
+    """
     def __init__(self):
-        self.list = []
+        self.list = [] #  todo: this should be a dict
         self.lock = Lock()
 
     def add(self, size, sha_hash, name='', files=None):
@@ -73,7 +75,7 @@ class TorrentList:
     def as_dict(self):
         d = {}
         for t in self.__iter__():
-            d[t.hash] = {t.as_dict}
+            d[t.hash] = t.as_dict
 
         return d
 
