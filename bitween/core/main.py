@@ -14,7 +14,7 @@ from types import FunctionType
 def create_xmpp_client(jid, password):
     c = XmppClientBase(jid, password)
     c.connect()
-    c.process()
+    c.process(threaded=True)
     return c
 
 
@@ -72,9 +72,10 @@ class Sentinel(Thread, Subscriber):
                 (topic, args, kwargs) = ret
                 try:
                     f = getattr(self, 'on_%s' % topic)
+                    logger.debug('calling %s' % f)
                     f(*args, **kwargs)
-                except:
-                    logger.error('something went wrong when calling on_%s' % topic)
+                except Exception as e:
+                    logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
         logging.info('quitting')
 
@@ -85,7 +86,7 @@ class Sentinel(Thread, Subscriber):
         """
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
-            # self.in_queue.put(['add_file', 'shared/df'])
+        publish('update_magnetlinks')
 
     def on_add_file(self, file):
         logger.debug('adding file')
@@ -95,14 +96,16 @@ class Sentinel(Thread, Subscriber):
         """
         updates the list of handles and triggers all xmpp clients to send the new file list
         """
-        publish('magnet_links_publish')  # call method on xmpp clients
+        publish('update_magnetlinks')  # call method on xmpp clients
         pass
 
     def on_exit(self):
-        for c in self.xmpp_clients:
-            c['client'].join()
+
         self.bt_client['client'].join()
 
         self.api.join()
+
+        #for c in self.xmpp_clients:
+        #    c['client'].join()
 
         self.end = True

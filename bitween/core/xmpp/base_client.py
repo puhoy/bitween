@@ -11,6 +11,9 @@ from types import FunctionType
 
 from bitween.pubsub import publish, Subscriber
 
+from .magnetlinkstanza import MagnetLinksStanza
+from .. import handlelist
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -39,7 +42,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         self.add_event_handler("session_start", self.start)
 
         self.s = Subscriber()
-        self.s.name = 'xmpp_client_%s' % self.jid.full
+        self.s.name = 'xmpp_client_%s' % self.boundjid.bare
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
@@ -68,6 +71,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
         self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
         self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        #self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
         ## Generic pubsub event handlers for all nodes
         #
@@ -76,7 +80,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
 
-        # self['xep_0163'].publish(MagnetLinksStanza(self.shares))
+
 
         self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
 
@@ -91,15 +95,19 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
             try:
                 f = getattr(self, 'on_%s' % topic)
                 f(*args, **kwargs)
-            except:
-                logger.error('something went wrong when calling on_%s' % topic)
+            except Exception as e:
+                logger.error('something went wrong when calling on_%s: %s' % (topic, e))
+
+    def on_update_magnetlinks(self):
+        self['xep_0163'].publish(MagnetLinksStanza(handlelist))
 
     @staticmethod
     def on_magnet_links_publish(msg):
         """ handle incoming files """
-        logging.debug('Published item %s to %s:' % (
-            msg['pubsub_event']['items']['item']['id'],
-            msg['pubsub_event']['items']['node']))
+        logging.debug('magnetlinks: %s' % msg)
+        #logging.debug('Published item %s to %s:' % (
+        #    msg['pubsub_event']['items']['item']['id'],
+        #    msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
         if data is not None:
             for d in data:
@@ -122,6 +130,9 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
     #@asyncio.coroutine
     def del_mlinks(self, mlinks):
         pass
+
+    def on_exit(self):
+        self.disconnect(wait=True)
 
 
 """
