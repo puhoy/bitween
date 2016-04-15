@@ -12,7 +12,7 @@ from types import FunctionType
 from bitween.pubsub import publish, Subscriber
 
 from .magnetlinkstanza import MagnetLinksStanza
-from .. import handlelist
+from bitween.core.models import handlelist, contactlist
 
 import logging
 
@@ -99,7 +99,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
     def on_update_magnetlinks(self):
-        self['xep_0163'].publish(MagnetLinksStanza(handlelist))
+        self['xep_0163'].publish(MagnetLinksStanza(handlelist), ifrom=self.boundjid.full)
 
     @staticmethod
     def on_magnet_links_publish(msg):
@@ -109,27 +109,21 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
         #    msg['pubsub_event']['items']['item']['id'],
         #    msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
+        logger.debug('magnetlinks: %s' % msg)
+
+        contact = contactlist.get_contact(str(msg['from']))
         if data is not None:
+            contacts_torrents = []
             for d in data:
-                logger.debug('got %s' % d)
+                hash = d.text
+                size = d.attrib['size']
+                name = d.attrib['name']
+                contacts_torrents.append({"hash": hash, "size": size, "name": name})
+                logger.debug('got %s' % size)
+            contact.set_torrents(contacts_torrents)
         else:
             logger.debug('No item content')
 
-    ##
-    #  async commands
-    ##
-    #@asyncio.coroutine
-    def add_mlinks(self, mlinks):
-        """
-
-        :param mlinks: a list of magnet links
-        :return:
-        """
-        pass
-
-    #@asyncio.coroutine
-    def del_mlinks(self, mlinks):
-        pass
 
     def on_exit(self):
         self.disconnect(wait=True)

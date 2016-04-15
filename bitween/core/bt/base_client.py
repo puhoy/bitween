@@ -11,7 +11,8 @@ from types import FunctionType
 import libtorrent as lt
 
 from bitween.pubsub import publish, Subscriber
-from .. import handlelist, HandleList
+from ..models import HandleList
+from bitween.core.models import handlelist
 
 logger = logging.getLogger(__name__)
 

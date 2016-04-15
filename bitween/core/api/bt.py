@@ -5,7 +5,7 @@ from flask import jsonify
 
 from bitween.pubsub import publish
 from . import jsonrpc
-from .. import handlelist
+from bitween.core.models import handlelist
 import logging
 logger = logging.getLogger(__name__)
 from .. import conf
@@ -20,7 +20,7 @@ def get_torrents():
 
 @jsonrpc.method('bt.add_torrent', file=str)
 def add_torrent(file=''):
-    if os.path.isfile(file):
+    if os.path.exists(file):
         publish('add_file', file)
         return True
     else:
@@ -53,3 +53,5 @@ def add_peer(hash, peer_address, peer_port):
             # found torrent, give it to bt module
             publish('add_peer', h['hash'], str(peer_address), int(peer_port))
             return True
+
+

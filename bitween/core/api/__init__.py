@@ -17,6 +17,8 @@ jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=True)
 from .bt import *
 from .xmpp import *
 
+from ..models import contactlist
+
 
 @jsonrpc.method('Api.versions')
 def versions():
@@ -35,6 +37,16 @@ def safe_exit():
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
+
+
+@jsonrpc.method('Api.get_all_torrents')
+def get_all_torrents():
+    d = {}
+    for k, v in contactlist.dict.iteritems():
+        logger.debug('contact %s' % k)
+        d[str(k)] = v.torrents_as_dict
+    return d
+
 
 
 class JsonRpcAPI(Thread):

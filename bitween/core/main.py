@@ -14,7 +14,7 @@ from types import FunctionType
 def create_xmpp_client(jid, password):
     c = XmppClientBase(jid, password)
     c.connect()
-    c.process(threaded=True)
+    c.process()
     return c
 
 
@@ -24,7 +24,8 @@ def create_torrent_client():
     return ts
 
 
-from . import conf, handlelist
+from . import conf
+from bitween.core.models import handlelist
 
 
 class Sentinel(Thread, Subscriber):
