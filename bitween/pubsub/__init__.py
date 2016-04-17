@@ -74,7 +74,8 @@ def publish(topic, *args, **kwargs):
     with lock:
         for s in t['subscribers']:
             logger.debug('published message on topic %s: %s %s' % (topic, args, kwargs))
-            s.put((topic, args, kwargs))
+            s.put_message((topic, args, kwargs))
+        return True
 
 
 def _get_topic(topic):
@@ -108,18 +109,31 @@ class PubSubscriber:
                 logger.debug('already subscribed to %s' % topic)
                 return False
 
-    def put(self, topic, *args, **kwargs):
+    def put_message(self, topic, *args, **kwargs):
         self.queue.put(topic, *args, **kwargs)
 
     def has_messages(self, timeout=None):
         return self.queue.qsize() != 0
 
-    def get(self, timeout=0.1):
+    def get_message(self, timeout=0.1):
         try:
             (topic, args, kwargs) = self.queue.get(block=True, timeout=timeout)
             return topic, args, kwargs
         except Empty:
             return False
+
+    def publish(self, topic, *args, **kwargs):
+        """
+        just for nicer logging output. calls the regular publish via this method
+
+        :param topic:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        ret = publish(topic, *args, **kwargs)
+        if not ret:
+            logger.error('error at %s' % self)
 
     def __del__(self):
         with lock:

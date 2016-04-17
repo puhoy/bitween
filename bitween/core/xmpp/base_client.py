@@ -9,7 +9,7 @@ from sleekxmpp.xmlstream import tostring
 #import asyncio
 from types import FunctionType
 
-from bitween.pubsub import publish, PubSubscriber
+from bitween.pubsub import PubSubscriber
 
 from .magnetlinkstanza import MagnetLinksStanza
 from bitween.core.models import handlelist, contactlist
@@ -28,8 +28,8 @@ else:
 
 class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password, settings={}):
-        super(XmppClientBase, self).__init__(jid, password)
-        super(PubSubscriber, self).__init__()
+        sleekxmpp.ClientXMPP.__init__(self, jid, password)
+        PubSubscriber.__init__(self)
 
         if not settings:
             settings = {}
@@ -91,8 +91,8 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
 
         :return:
         '''
-        if self.s.has_messages():
-            topic, args, kwargs = self.s.get()
+        if self.has_messages():
+            topic, args, kwargs = self.get_message()
             try:
                 f = getattr(self, 'on_%s' % topic)
                 f(*args, **kwargs)

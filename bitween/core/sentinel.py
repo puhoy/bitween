@@ -6,10 +6,10 @@ from .xmpp.base_client import XmppClientBase
 
 logger = logging.getLogger(__name__)
 
-from bitween.pubsub import publish, PubSubscriber
+from bitween.pubsub import PubSubscriber
 from bitween.core.api import JsonRpcAPI
 from types import FunctionType
-
+import ipgetter
 
 def create_xmpp_client(jid, password):
     c = XmppClientBase(jid, password)
@@ -56,7 +56,7 @@ class Sentinel(Thread, PubSubscriber):
         self.ip_v6 = ''
         self.got_ip = False
 
-    def on_set_ip_address(self, ipv4='', ipv6=''):
+    def get_ip_address(self, ipv4='', ipv6=''):
         """
         listen for ip from libtorrent
 
@@ -64,10 +64,17 @@ class Sentinel(Thread, PubSubscriber):
         :param ipv6:
         :return:
         """
+        logger.debug('getting own external ip...')
+        # todo: this is ipv4 only
         self.ip_v4 = ipv4
         self.ip_v6 = ipv6
+
+        self.ip_v4 = ipgetter.myip()
+
         if self.ip_v6 or self.ip_v4:
             self.got_ip = True
+            logger.debug('got ip: %s' % self.ip_v4)
+            self.add_bt_client()
 
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
@@ -79,12 +86,13 @@ class Sentinel(Thread, PubSubscriber):
         self.bt_client = {'client': c}
 
     def run(self):
-        self.add_bt_client()
+        #self.add_bt_client()
+        self.get_ip_address()
         self.api.start()
         logger.debug('starting loop')
         while not self.end:
             # news?
-            ret = self.get()
+            ret = self.get_message()
             if ret:
                 (topic, args, kwargs) = ret
                 try:
@@ -103,17 +111,17 @@ class Sentinel(Thread, PubSubscriber):
         """
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
-        publish('update_magnetlinks')
+        self.publish('update_magnetlinks')
 
     def on_add_file(self, file):
         logger.debug('adding file')
-        publish('generate_torrent', file)
+        self.publish('generate_torrent', file)
 
     def on_new_handle(self):
         """
         updates the list of handles and triggers all xmpp clients to send the new file list
         """
-        publish('update_magnetlinks')  # call method on xmpp clients
+        self.publish('update_magnetlinks')  # call method on xmpp clients
         pass
 
     def on_exit(self):

@@ -3,7 +3,7 @@ import logging
 
 from argh import ArghParser
 
-from bitween.core.main import Sentinel
+from bitween.core.sentinel import Sentinel
 
 
 setup_logging()

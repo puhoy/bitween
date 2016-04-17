@@ -10,7 +10,7 @@ from types import FunctionType
 
 import libtorrent as lt
 
-from bitween.pubsub import publish, PubSubscriber
+from bitween.pubsub import PubSubscriber
 from ..models import HandleList
 from bitween.core.models import handlelist
 
@@ -23,8 +23,8 @@ class TorrentSession(Thread, PubSubscriber):
     """
 
     def __init__(self):
-        super(TorrentSession, self).__init__()
-        super(PubSubscriber, self).__init__()
+        Thread.__init__(self)
+        PubSubscriber.__init__(self)
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
@@ -66,12 +66,14 @@ class TorrentSession(Thread, PubSubscriber):
         # logger.info('listening on port %s' % self.session.listen_port())
         # logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
-        publish('bt_ready')
+
 
         self.name = 'bt'
         listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
             self.subscribe(l.split('on_')[1])
+
+        self.publish('bt_ready')
 
     def setup_settings(self):
         """
@@ -102,17 +104,17 @@ class TorrentSession(Thread, PubSubscriber):
         #    lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
         #self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
         #self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
-        #self.session.add_extension(
-        #    lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
+        self.session.add_extension(
+            lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
 
         #self.session.start_dht()
         #self.session.start_lsd()
         #self.session.start_upnp()
         #self.session.start_natpmp()
-        self.session.stop_dht()
-        self.session.stop_lsd()
-        self.session.stop_natpmp()
-        self.session.stop_upnp()
+        #self.session.stop_dht()
+        #self.session.stop_lsd()
+        #self.session.stop_natpmp()
+        #self.session.stop_upnp()
 
     def setup_db(self):
         """
@@ -148,8 +150,8 @@ class TorrentSession(Thread, PubSubscriber):
         self.end = True
 
     def handle_queue(self):
-        if self.s.has_messages():
-            topic, args, kwargs = self.s.get()
+        if self.has_messages():
+            topic, args, kwargs = self.get_message()
             try:
                 f = getattr(self, 'on_%s' % topic)
                 f(*args, **kwargs)
@@ -277,8 +279,10 @@ class TorrentSession(Thread, PubSubscriber):
                     handlelist.rebuild(self.handles)
                 elif (alert.what() == "stats_alert"):
                     pass
-                elif alert.what() == "got_ip_alert":  # todo
-                    publish('set_ip_address', ip_address)  # todo
+                elif alert.what() == "external_ip_alert":  # todo
+                    ip = alert.external_address
+                    logger.info('got our ip: %s' % ip)
+                    self.publish('set_ip_address', ip)  # todo
                 else:
                     logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
             time.sleep(1)
@@ -392,7 +396,7 @@ class TorrentSession(Thread, PubSubscriber):
 
         self.handles.append(handle)
         handlelist.rebuild(self.handles)
-        publish('new_handle')
+        self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
     def on_add_torrent(self, torrentfilepath, save_path):
@@ -407,7 +411,7 @@ class TorrentSession(Thread, PubSubscriber):
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
         self.on_add_torrent_by_info(info, save_path)
-        publish('new_handle')
+        self.publish('new_handle')
 
     def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
@@ -427,7 +431,7 @@ class TorrentSession(Thread, PubSubscriber):
 
         self.handles.append(handle)
         handlelist.rebuild(self.handles)
-        publish('new_handle')
+        self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
     def on_generate_torrent(self, folder):
