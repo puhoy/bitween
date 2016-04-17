@@ -92,7 +92,7 @@ def _new_topic():
     }
 
 
-class Subscriber:
+class PubSubscriber:
     def __init__(self, name=''):
         self.queue = queue.Queue()
         self.name = name

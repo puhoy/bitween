@@ -10,20 +10,21 @@ from types import FunctionType
 
 import libtorrent as lt
 
-from bitween.pubsub import publish, Subscriber
+from bitween.pubsub import publish, PubSubscriber
 from ..models import HandleList
 from bitween.core.models import handlelist
 
 logger = logging.getLogger(__name__)
 
 
-class TorrentSession(Thread):
+class TorrentSession(Thread, PubSubscriber):
     """
     Backend for the TorrentSession
     """
 
     def __init__(self):
         super(TorrentSession, self).__init__()
+        super(PubSubscriber, self).__init__()
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
@@ -67,11 +68,10 @@ class TorrentSession(Thread):
 
         publish('bt_ready')
 
-        self.s = Subscriber()
-        self.s.name = 'bt'
+        self.name = 'bt'
         listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
-            self.s.subscribe(l.split('on_')[1])
+            self.subscribe(l.split('on_')[1])
 
     def setup_settings(self):
         """
@@ -277,6 +277,8 @@ class TorrentSession(Thread):
                     handlelist.rebuild(self.handles)
                 elif (alert.what() == "stats_alert"):
                     pass
+                elif alert.what() == "got_ip_alert":  # todo
+                    publish('set_ip_address', ip_address)  # todo
                 else:
                     logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
             time.sleep(1)

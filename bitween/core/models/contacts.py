@@ -40,7 +40,6 @@ class Contact:
         for t in torrent_dict_list:
             self.add_torrent(t['size'], t['hash'], t['name'], files=None)
 
-
     def add_torrent(self, size, sha_hash, name='', files=None):
         self.torrents.add(size=size, sha_hash=sha_hash, name=name, files=files)
 

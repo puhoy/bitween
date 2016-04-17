@@ -6,7 +6,7 @@ from .xmpp.base_client import XmppClientBase
 
 logger = logging.getLogger(__name__)
 
-from bitween.pubsub import publish, Subscriber
+from bitween.pubsub import publish, PubSubscriber
 from bitween.core.api import JsonRpcAPI
 from types import FunctionType
 
@@ -28,7 +28,7 @@ from . import conf
 from bitween.core.models import handlelist
 
 
-class Sentinel(Thread, Subscriber):
+class Sentinel(Thread, PubSubscriber):
     """
     should keep track of clients and torrens
     """
@@ -39,19 +39,35 @@ class Sentinel(Thread, Subscriber):
 
     def __init__(self):
         Thread.__init__(self)
-        Subscriber.__init__(self)
+        PubSubscriber.__init__(self)
         self.name = 'sentinel'
-        self.subscribe('sentinel')
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in Sentinel.__dict__.items() if
-                     (type(y) == FunctionType and x.startswith('on_'))]  # ['bt_ready', 'add_file']
+                     (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
             self.subscribe(l.split('on_')[1])
 
         self.api = JsonRpcAPI()
 
         self.end = False
+
+        self.ip_v4 = ''
+        self.ip_v6 = ''
+        self.got_ip = False
+
+    def on_set_ip_address(self, ipv4='', ipv6=''):
+        """
+        listen for ip from libtorrent
+
+        :param ipv4:
+        :param ipv6:
+        :return:
+        """
+        self.ip_v4 = ipv4
+        self.ip_v6 = ipv6
+        if self.ip_v6 or self.ip_v4:
+            self.got_ip = True
 
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
@@ -106,7 +122,8 @@ class Sentinel(Thread, Subscriber):
 
         self.api.join()
 
-        #for c in self.xmpp_clients:
+        # for c in self.xmpp_clients:
         #    c['client'].join()
+        # todo: this breaks sleekxmpp while quitting, but i think it should join (?)
 
         self.end = True

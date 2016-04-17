@@ -9,7 +9,7 @@ from sleekxmpp.xmlstream import tostring
 #import asyncio
 from types import FunctionType
 
-from bitween.pubsub import publish, Subscriber
+from bitween.pubsub import publish, PubSubscriber
 
 from .magnetlinkstanza import MagnetLinksStanza
 from bitween.core.models import handlelist, contactlist
@@ -26,9 +26,10 @@ else:
     raw_input = input
 
 
-class XmppClientBase(sleekxmpp.ClientXMPP):
+class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password, settings={}):
         super(XmppClientBase, self).__init__(jid, password)
+        super(PubSubscriber, self).__init__()
 
         if not settings:
             settings = {}
@@ -41,13 +42,13 @@ class XmppClientBase(sleekxmpp.ClientXMPP):
 
         self.add_event_handler("session_start", self.start)
 
-        self.s = Subscriber()
-        self.s.name = 'xmpp_client_%s' % self.boundjid.bare
+
+        self.name = 'xmpp_client_%s' % self.boundjid.bare
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
         listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
         for l in listen_to:
-            self.s.subscribe(l.split('on_')[1])
+            self.subscribe(l.split('on_')[1])
 
 
     def start(self, event):
