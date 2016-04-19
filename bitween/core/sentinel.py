@@ -3,6 +3,7 @@ from threading import Thread
 
 from .bt.base_client import TorrentSession
 from .xmpp.base_client import XmppClientBase
+from . import ip
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class Sentinel(Thread, PubSubscriber):
         if self.ip_v6 or self.ip_v4:
             self.got_ip = True
             logger.debug('got ip: %s' % self.ip_v4)
+            ip = self.ip_v4
             self.add_bt_client()
 
     def _add_xmpp_client(self, jid, password):

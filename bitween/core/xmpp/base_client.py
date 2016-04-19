@@ -111,6 +111,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
 
         contact = contactlist.get_contact(str(msg['from']))
         if data is not None:
+            contact.ip_v4 = data.attrib['ip']
             contacts_torrents = []
             for d in data:
                 hash = d.text

@@ -1,11 +1,13 @@
 from xml.etree import cElementTree as et
 import logging
+from .. import ip
 logger = logging.getLogger(__name__)
 
 
 class MagnetLinksStanza(object):
     def __init__(self, handles):
-        root = et.Element("hashes")
+        root = et.Element("hashes", ip=ip)
+
         for h in handles:
             hash = et.Element("hash", size=str(h.get('total_size', 0)), name=h.get("name", ""))
             hash.text = h.get('hash', '')

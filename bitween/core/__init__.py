@@ -13,6 +13,8 @@ save_path = conf.get('save_path', 'share')
 if not os.path.isdir(save_path):
     os.mkdir(save_path)
 
+
+ip = ''
 """
 http://stackoverflow.com/questions/6319207/are-lists-thread-safe
 
