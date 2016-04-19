@@ -24,7 +24,7 @@ class TorrentSession(Thread, PubSubscriber):
 
     def __init__(self):
         Thread.__init__(self)
-        PubSubscriber.__init__(self)
+        PubSubscriber.__init__(self, autosubscribe=True)
         self.statdb = 'stat.db'
         self.settingname = 'defaultsetting'
         self.session = lt.session()
@@ -66,13 +66,7 @@ class TorrentSession(Thread, PubSubscriber):
         # logger.info('listening on port %s' % self.session.listen_port())
         # logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
-
-
         self.name = 'bt'
-        listen_to = [x for x, y in TorrentSession.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
-        for l in listen_to:
-            self.subscribe(l.split('on_')[1])
-
         self.publish('bt_ready')
 
     def setup_settings(self):
@@ -100,21 +94,21 @@ class TorrentSession(Thread, PubSubscriber):
         self.session.set_settings(session_settings)
 
         # extensions
-        #self.session.add_extension(
+        # self.session.add_extension(
         #    lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
-        #self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
-        #self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
+        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
+        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
         self.session.add_extension(
             lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
 
-        #self.session.start_dht()
-        #self.session.start_lsd()
-        #self.session.start_upnp()
-        #self.session.start_natpmp()
-        #self.session.stop_dht()
-        #self.session.stop_lsd()
-        #self.session.stop_natpmp()
-        #self.session.stop_upnp()
+        # self.session.start_dht()
+        # self.session.start_lsd()
+        # self.session.start_upnp()
+        # self.session.start_natpmp()
+        # self.session.stop_dht()
+        # self.session.stop_lsd()
+        # self.session.stop_natpmp()
+        # self.session.stop_upnp()
 
     def setup_db(self):
         """
@@ -371,8 +365,8 @@ class TorrentSession(Thread, PubSubscriber):
 
         link = magnetlink
         handle = lt.add_magnet_uri(self.session, link, params)
-        #params = lt.parse_magnet_uri(magnetlink)
-        #logger.debug(params)
+        # params = lt.parse_magnet_uri(magnetlink)
+        # logger.debug(params)
 
         # {'storage_mode': libtorrent.storage_mode_t.storage_mode_sparse,
         # 'source_feed_url': '',
@@ -386,13 +380,13 @@ class TorrentSession(Thread, PubSubscriber):
         # 'dht_nodes': [],
         # 'uuid': ''}
 
-        #params['info_hash'] = str(params['info_hash'])
-        #logging.debug('hash as bytes: %s' % params['info_hash'])
-        #handle = self.session.add_torrent(params)
+        # params['info_hash'] = str(params['info_hash'])
+        # logging.debug('hash as bytes: %s' % params['info_hash'])
+        # handle = self.session.add_torrent(params)
 
-        #logger.debug('added handle-hash %s' % handle.info_hash())
-        #info = handle.torrent_file()
-        #logger.debug('added handle-hash %s' % info.info_hash())
+        # logger.debug('added handle-hash %s' % handle.info_hash())
+        # info = handle.torrent_file()
+        # logger.debug('added handle-hash %s' % info.info_hash())
 
         self.handles.append(handle)
         handlelist.rebuild(self.handles)

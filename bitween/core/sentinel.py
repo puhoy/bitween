@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 from bitween.pubsub import PubSubscriber
 from bitween.core.api import JsonRpcAPI
-from types import FunctionType
 import ipgetter
 
 def create_xmpp_client(jid, password):
@@ -39,14 +38,11 @@ class Sentinel(Thread, PubSubscriber):
 
     def __init__(self):
         Thread.__init__(self)
-        PubSubscriber.__init__(self)
+        PubSubscriber.__init__(self, autosubscribe=True)
         self.name = 'sentinel'
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
-        listen_to = [x for x, y in Sentinel.__dict__.items() if
-                     (type(y) == FunctionType and x.startswith('on_'))]
-        for l in listen_to:
-            self.subscribe(l.split('on_')[1])
+
 
         self.api = JsonRpcAPI()
 

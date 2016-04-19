@@ -29,7 +29,7 @@ else:
 class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password, settings={}):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
-        PubSubscriber.__init__(self)
+        PubSubscriber.__init__(self, autosubscribe=True)
 
         if not settings:
             settings = {}
@@ -46,9 +46,6 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
         self.name = 'xmpp_client_%s' % self.boundjid.bare
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
-        listen_to = [x for x, y in XmppClientBase.__dict__.items() if (type(y) == FunctionType and x.startswith('on_'))]
-        for l in listen_to:
-            self.subscribe(l.split('on_')[1])
 
 
     def start(self, event):

@@ -2,6 +2,7 @@
 from threading import Lock
 import sys
 import logging
+from types import FunctionType
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -94,9 +95,20 @@ def _new_topic():
 
 
 class PubSubscriber:
-    def __init__(self, name=''):
+    def __init__(self, name='', autosubscribe=False):
+        """
+
+        :param name:
+        :param autosubscribe: if True, subscribe to all functionnames starting with on_, without on_ ("on_topic()" would subscribe to "topic")
+        :return:
+        """
         self.queue = queue.Queue()
         self.name = name
+        if autosubscribe:
+            listen_to = [x for x, y in self.__class__.__dict__.items() if
+                     (type(y) == FunctionType and x.startswith('on_'))]
+            for l in listen_to:
+                self.subscribe(l.split('on_')[1])
 
     def subscribe(self, topic):
         t = _get_topic(topic)
