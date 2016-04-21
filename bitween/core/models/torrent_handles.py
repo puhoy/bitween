@@ -17,6 +17,7 @@ class HandleList:
     def __init__(self, handles):
         self.list = []
         self.lock = Lock()
+        self.ip_address = ''
         self.rebuild(handles)
 
     def rebuild(self, handles):

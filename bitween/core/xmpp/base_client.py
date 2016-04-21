@@ -35,14 +35,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
             settings = {}
 
         self.settings = settings
-        self.register_plugin('xep_0030')  # Service Discovery
-        self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0163')  # pep
-        self.register_plugin('xep_0060')  # PubSub
-
         self.add_event_handler("session_start", self.start)
-
-
         self.name = 'xmpp_client_%s' % self.boundjid.bare
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
@@ -61,13 +54,25 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
                      event does not provide any additional
                      data.
         """
+        self.register_plugin('xep_0030')  # Service Discovery
+        self.register_plugin('xep_0199')  # XMPP Ping
+        self.register_plugin('xep_0163')  # pep
+        self.register_plugin('xep_0060')  # PubSub
+
         logger.debug('sending presence & getting roster')
         self.send_presence(ppriority=-128, pstatus='', ptype='xa')
         self.get_roster()
+
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
-        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
-        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
-        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
+        #self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
+        #self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
+        #self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
+
+        logging.debug('registering pep')
+        self['xep_0163'].register_pep('magnet_links', self.create_magnetlink_stanza())
+        logging.debug('registered pep')
+
+        logging.debug('adding event handler')
         self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
         #self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
@@ -77,8 +82,6 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
         # self.add_event_handler('pubsub_retract', handler)
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
-
-
 
         self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
 
@@ -96,35 +99,43 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-    def on_update_magnetlinks(self):
-        self['xep_0163'].publish(MagnetLinksStanza(handlelist), ifrom=self.boundjid.full)
+    def create_magnetlink_stanza(self):
+        return MagnetLinksStanza(handlelist, handlelist.ip_address)
 
-    @staticmethod
-    def on_magnet_links_publish(msg):
+    def on_update_magnetlinks(self):
+        logging.debug('publishing magnetlinks')
+        self['xep_0163'].publish(self.create_magnetlink_stanza(), ifrom=self.boundjid.full)
+
+    #@staticmethod
+    def on_magnet_links_publish(self, msg):
         """ handle incoming files """
-        logging.debug('magnetlinks: %s' % msg)
+        #logging.debug('magnetlinks: %s' % msg)
         #logging.debug('Published item %s to %s:' % (
         #    msg['pubsub_event']['items']['item']['id'],
         #    msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
+        logger.debug('got magnetlinks...')
         logger.debug('magnetlinks: %s' % msg)
 
         contact = contactlist.get_contact(str(msg['from']))
         if data is not None:
-            contact.ip_v4 = data.attrib['ip']
-            contacts_torrents = []
-            for d in data:
-                hash = d.text
-                size = d.attrib['size']
-                name = d.attrib['name']
-                contacts_torrents.append({"hash": hash, "size": size, "name": name})
-                logger.debug('got %s' % size)
-            contact.set_torrents(contacts_torrents)
+            logger.debug('data: %s' % data)
+            contact.ip_v4 = data.attrib.get('ip', False)
+            if contact.ip_v4:
+                contacts_torrents = []
+                for d in data:
+                    hash = d.text
+                    size = d.attrib['size']
+                    name = d.attrib['name']
+                    contacts_torrents.append({"hash": hash, "size": size, "name": name})
+                logger.debug('setting new torrents: %s' % contacts_torrents)
+                contact.set_torrents(contacts_torrents)
         else:
             logger.debug('No item content')
 
 
     def on_exit(self):
+        self['xep_0060'].purge(self.boundjid, self.create_magnetlink_stanza().namespace)
         self.disconnect(wait=True)
 
 

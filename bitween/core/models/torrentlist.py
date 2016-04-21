@@ -63,7 +63,7 @@ class TorrentList:
                     break
 
             if not found:
-                t = Torrent(size, sha_hash, name='', files=None)
+                t = Torrent(size, sha_hash, name=name, files=None)
                 self.list.append(t)
 
     def __iter__(self):
