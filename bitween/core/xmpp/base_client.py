@@ -56,29 +56,28 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
         """
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0163')  # pep
         self.register_plugin('xep_0060')  # PubSub
+        self.register_plugin('xep_0163')  # pep
+        self.register_plugin('xep_0115')
 
         logger.debug('sending presence & getting roster')
         self.send_presence(ppriority=-128, pstatus='', ptype='xa')
         self.get_roster()
-
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
         #self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
         #self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
         #self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
 
-        logging.debug('registering pep')
         self['xep_0163'].register_pep('magnet_links', self.create_magnetlink_stanza())
-        logging.debug('registered pep')
-
-        logging.debug('adding event handler')
         self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        logger.debug('sending presence & getting roster')
+
+
         #self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
         ## Generic pubsub event handlers for all nodes
         #
-        # self.add_event_handler('pubsub_publish', handler)
+        # self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
         # self.add_event_handler('pubsub_retract', handler)
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
@@ -104,7 +103,7 @@ class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
-        self['xep_0163'].publish(self.create_magnetlink_stanza(), ifrom=self.boundjid.full)
+        self['xep_0163'].publish(self.create_magnetlink_stanza())  # , ifrom=self.boundjid.full
 
     #@staticmethod
     def on_magnet_links_publish(self, msg):
