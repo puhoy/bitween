@@ -37,7 +37,7 @@ class Sentinel(Thread, PubSubscriber):
 
     files = handlelist
 
-    def __init__(self):
+    def __init__(self, api_host, api_port=8080):
         Thread.__init__(self)
         PubSubscriber.__init__(self, autosubscribe=True)
         self.name = 'sentinel'
@@ -45,7 +45,7 @@ class Sentinel(Thread, PubSubscriber):
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
 
 
-        self.api = JsonRpcAPI()
+        self.api = JsonRpcAPI(api_host, api_port)
 
         self.end = False
 

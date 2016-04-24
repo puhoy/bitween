@@ -19,7 +19,7 @@ def setup_logging(
         with open(path, 'rt') as f:
             config = json.load(f)
         logging.config.dictConfig(config)
-    else:
-        logging.basicConfig(level=default_level)
+
+    logging.basicConfig(level=default_level)
 
 setup_logging()

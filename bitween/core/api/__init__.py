@@ -48,10 +48,11 @@ def get_all_torrents():
     return d
 
 
-
 class JsonRpcAPI(Thread):
-    def __init__(self):
+    def __init__(self, api_host='localhost', api_port=8080):
         super(JsonRpcAPI, self).__init__()
+        self.api_port = api_port
+        self.api_host = api_host
 
     def run(self):
-        app.run(host='0.0.0.0')
+        app.run(host=self.api_host, port=self.api_port)
