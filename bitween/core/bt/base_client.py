@@ -17,7 +17,7 @@ from bitween.core.models import handlelist
 logger = logging.getLogger(__name__)
 
 
-class TorrentSession(Thread, PubSubscriber):
+class TorrentClient(Thread, PubSubscriber):
     """
     Backend for the TorrentSession
     """

@@ -26,7 +26,7 @@ else:
     raw_input = input
 
 
-class XmppClientBase(sleekxmpp.ClientXMPP, PubSubscriber):
+class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password, settings={}):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
         PubSubscriber.__init__(self, autosubscribe=True)

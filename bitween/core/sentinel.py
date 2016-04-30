@@ -1,8 +1,8 @@
 import logging
 from threading import Thread
 
-from .bt.base_client import TorrentSession
-from .xmpp.base_client import XmppClientBase
+from .bt.base_client import TorrentClient
+from .xmpp.base_client import XmppClient
 
 
 logger = logging.getLogger(__name__)
@@ -12,14 +12,14 @@ from bitween.core.api import JsonRpcAPI
 import ipgetter
 
 def create_xmpp_client(jid, password):
-    c = XmppClientBase(jid, password)
+    c = XmppClient(jid, password)
     c.connect()
     c.process()
     return c
 
 
 def create_torrent_client():
-    ts = TorrentSession()
+    ts = TorrentClient()
     ts.start()
     return ts
 
