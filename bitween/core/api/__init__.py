@@ -16,6 +16,7 @@ jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=True)
 
 from .bt import *
 from .xmpp import *
+from .debug import *
 
 from ..models import contactlist
 
