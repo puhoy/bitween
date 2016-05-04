@@ -79,11 +79,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.send_presence(ppriority=1)
         self.get_roster()
 
-        #self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
-        #self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
-        #self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
-        #self['xep_0115'].update_caps()
-
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
 
         logger.debug('sending presence & getting roster')
@@ -93,7 +88,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         ## Generic pubsub event handlers for all nodes
         #
-        #self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
+        self.add_event_handler('shares_publish', self.on_magnet_links_publish)
         # self.add_event_handler('pubsub_retract', handler)
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
