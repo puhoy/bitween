@@ -15,6 +15,7 @@ from .magnetlinkstanza import MagnetLinksStanza
 from bitween.core.models import handlelist, contactlist
 
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,10 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
         self.register_plugin('xep_0060')  # PubSub
+        self.register_plugin('xep_0115')  # Entity Caps
         self.register_plugin('xep_0163')  # pep
-        self.register_plugin('xep_0115')
 
-        logger.debug('sending presence & getting roster')
+        logger.debug('sending presence & getting roster for %s' % self.boundjid)
         self.send_presence(ppriority=-128, pstatus='', ptype='xa')
         self.get_roster()
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
@@ -98,12 +99,12 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-    def create_magnetlink_stanza(self):
+    def create_magnetlink_stanza(self, handlelist=handlelist):
         return MagnetLinksStanza(handlelist, handlelist.ip_address)
 
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
-        self['xep_0163'].publish(self.create_magnetlink_stanza())  # , ifrom=self.boundjid.full
+        self['xep_0163'].publish(self.create_magnetlink_stanza(), ifrom=self.boundjid)  # , ifrom=self.boundjid.full
 
     #@staticmethod
     def on_magnet_links_publish(self, msg):
@@ -116,7 +117,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         logger.debug('got magnetlinks...')
         logger.debug('magnetlinks: %s' % msg)
 
-        contact = contactlist.get_contact(str(msg['from']))
+        contact = contactlist.get_contact(str(msg['from'].full))
         if data is not None:
             logger.debug('data: %s' % data)
             contact.ip_v4 = data.attrib.get('ip', False)
@@ -134,40 +135,10 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
 
     def on_exit(self):
+        logger.debug("purge")
         self['xep_0060'].purge(self.boundjid, self.create_magnetlink_stanza().namespace)
+        self['xep_0060'].delete_node(self.boundjid, self.create_magnetlink_stanza().namespace)
         self.disconnect(wait=True)
 
 
-"""
-# events
 
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: roster_update
-DEBUG:root:got roster: {}
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence_available
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: got_online
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: changed_status
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: sent_presence
-
-
-## presence subscription
-
-DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <presence to="bitween@xmpp.kwoh.de" from="jan@xmpp.kwoh.de" type="subscribe" />
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence_subscribe
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: changed_subscription
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: roster_subscription_request
-DEBUG:sleekxmpp.xmlstream.xmlstream:SEND: <presence xml:lang="en" to="jan@xmpp.kwoh.de" type="subscribed" />
-DEBUG:sleekxmpp.xmlstream.xmlstream:SEND: <presence xml:lang="en" to="jan@xmpp.kwoh.de" />
-DEBUG:sleekxmpp.xmlstream.xmlstream:SEND: <presence xml:lang="en" to="jan@xmpp.kwoh.de" type="subscribe" />
-DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <iq type="set" id="lx23"><query xmlns="jabber:iq:roster" ver="2"><item jid="jan@xmpp.kwoh.de" subscription="from" /></query></iq>
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: roster_update
-DEBUG:sleekxmpp.xmlstream.xmlstream:SEND: <iq id="lx23" type="result"><query xmlns="jabber:iq:roster" /></iq>
-DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <iq type="set" id="lx25"><query xmlns="jabber:iq:roster" ver="3"><item jid="jan@xmpp.kwoh.de" subscription="from" ask="subscribe" /></query></iq>
-DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <presence to="bitween@xmpp.kwoh.de" from="jan@xmpp.kwoh.de" type="unavailable" />
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: roster_update
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence
-DEBUG:sleekxmpp.xmlstream.xmlstream:Event triggered: presence_unavailable
-DEBUG:sleekxmpp.xmlstream.xmlstream:SEND: <iq id="lx25" type="result"><query xmlns="jabber:iq:roster" /></iq>
-
-"""

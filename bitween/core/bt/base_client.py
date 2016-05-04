@@ -105,10 +105,10 @@ class TorrentClient(Thread, PubSubscriber):
         # self.session.start_lsd()
         # self.session.start_upnp()
         # self.session.start_natpmp()
-        # self.session.stop_dht()
-        # self.session.stop_lsd()
-        # self.session.stop_natpmp()
-        # self.session.stop_upnp()
+        self.session.stop_dht()
+        self.session.stop_lsd()
+        self.session.stop_natpmp()
+        self.session.stop_upnp()
 
     def setup_db(self):
         """
@@ -513,13 +513,13 @@ class TorrentClient(Thread, PubSubscriber):
         # load state
         db = sqlite3.connect(self.statdb)
         c = db.cursor()
-        erg = c.execute("SELECT * FROM sessionstatus")
-        f = erg.fetchone()
-        if f:
-            encsettings = f[1]
-            settings = lt.bdecode(bytes(encsettings))
-            self.session.load_state(settings)
-            logger.info("loaded settings: %s" % settings)
+        #erg = c.execute("SELECT * FROM sessionstatus")
+        #f = erg.fetchone()
+        #if f:
+        #    encsettings = f[1]
+        #    settings = lt.bdecode(bytes(encsettings))
+        #    self.session.load_state(settings)
+        #    logger.info("loaded settings: %s" % settings)
 
         # load last torrents
         erg = c.execute("SELECT * FROM torrents")
