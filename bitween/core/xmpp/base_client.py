@@ -48,8 +48,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
 
-        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
-        self['xep_0163'].register_pep('magnet_links', self.create_magnetlink_stanza())
+
         self.add_event_handler("session_start", self.start)
 
     def start(self, event):
@@ -71,24 +70,25 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.send_presence(ppriority=1)
         self.get_roster()
+
+        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
+        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
+        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
+
+        self['xep_0163'].register_pep('magnet_links', self.create_magnetlink_stanza())
+        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+
         self['xep_0115'].update_caps()
 
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
-        #self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
-        #self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
-        #self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
-
 
         logger.debug('sending presence & getting roster')
-
-
-
 
         #self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
 
         ## Generic pubsub event handlers for all nodes
         #
-        # self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
+        self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
         # self.add_event_handler('pubsub_retract', handler)
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
@@ -134,7 +134,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
-        self['xep_0163'].publish(self.create_magnetlink_stanza(), ifrom=self.boundjid.full)  # , ifrom=self.boundjid.full
+        self['xep_0163'].publish(self.create_magnetlink_stanza())  # , ifrom=self.boundjid.full
 
     #@staticmethod
     def on_magnet_links_publish(self, msg):
