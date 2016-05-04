@@ -4,18 +4,17 @@ __author__ = 'meatpuppet'
 import sys
 
 import sleekxmpp
-from sleekxmpp.xmlstream import tostring
 
-#import asyncio
-from types import FunctionType
 
 from bitween.pubsub import PubSubscriber
 
-from .magnetlinkstanza import MagnetLinksStanza
+
+
 from bitween.core.models import handlelist, contactlist
 
 import logging
 import random
+from . import share_plugin
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +35,21 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             settings = {}
 
         self.settings = settings
-
-        self.register_plugin('xep_0030')  # Service Discovery
+        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        #self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0060')  # PubSub
-        self.register_plugin('xep_0115')  # Entity Caps
-        self.register_plugin('xep_0163')  # pep
+        #self.register_plugin('xep_0060')  # PubSub
+        #self.register_plugin('xep_0115')  # Entity Caps
+        #self.register_plugin('xep_0163')  # pep
+
+        self.register_plugin('xep_0004')
+        self.register_plugin('xep_0030')
+        self.register_plugin('xep_0060')
+        self.register_plugin('xep_0115')
+        self.register_plugin('xep_0118')
+        #self.register_plugin('xep_0128')
+        self.register_plugin('xep_0163')
+        self.register_plugin('shares', module=share_plugin)
 
 
         self.name = 'xmpp_client_%s' % self.boundjid.bare
@@ -71,29 +79,26 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.send_presence(ppriority=1)
         self.get_roster()
 
-        self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
-        self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
-        self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
-
-        self['xep_0163'].register_pep('magnet_links', self.create_magnetlink_stanza())
-        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
-
-        self['xep_0115'].update_caps()
+        #self['xep_0163'].add_interest('https://xmpp.kwoh.de/protocol/magnet_links')  # pep
+        #self['xep_0030'].add_feature('https://xmpp.kwoh.de/protocol/magnet_links')  # service discovery
+        #self['xep_0060'].map_node_event('https://xmpp.kwoh.de/protocol/magnet_links', 'magnet_links')  # pubsub
+        #self['xep_0115'].update_caps()
 
         # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
 
         logger.debug('sending presence & getting roster')
 
-        #self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
+        self.on_update_magnetlinks()
+
 
         ## Generic pubsub event handlers for all nodes
         #
-        self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
+        #self.add_event_handler('pubsub_publish', self.on_magnet_links_publish)
         # self.add_event_handler('pubsub_retract', handler)
         # self.add_event_handler('pubsub_purge', handler)
         # self.add_event_handler('pubsub_delete', handler)
 
-        self.scheduler.add("schedule", 2, self.process_queue, repeat=True)
+        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
 
     def process_queue(self):
         '''
@@ -109,8 +114,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-    def create_magnetlink_stanza(self, handlelist=handlelist):
-        return MagnetLinksStanza(handlelist, handlelist.ip_address)
 
     def on_send_handles(self):
         """
@@ -134,7 +137,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
-        self['xep_0163'].publish(self.create_magnetlink_stanza())  # , ifrom=self.boundjid.full
+        #self['xep_0163'].publish(self.create_magnetlink_stanza())
+        self['shares'].publish_shares(handlelist, handlelist.ip_address, ifrom=self.boundjid.full)
 
     #@staticmethod
     def on_magnet_links_publish(self, msg):
@@ -144,7 +148,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         #    msg['pubsub_event']['items']['item']['id'],
         #    msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
-        logger.debug('got magnetlinks...')
+        logger.debug('got magnetlinks from %s' % msg['from'].full)
         logger.debug('magnetlinks: %s' % msg)
 
         contact = contactlist.get_contact(str(msg['from'].full))
@@ -158,16 +162,13 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                     size = d.attrib['size']
                     name = d.attrib['name']
                     contacts_torrents.append({"hash": hash, "size": size, "name": name})
-                logger.debug('setting new torrents: %s' % contacts_torrents)
+                #logger.debug('setting new torrents: %s' % contacts_torrents)
                 contact.set_torrents(contacts_torrents)
         else:
             logger.debug('No item content')
 
 
     def on_exit(self):
-        logger.debug("purge")
-        self['xep_0060'].purge(self.boundjid, self.create_magnetlink_stanza().namespace)
-        self['xep_0060'].delete_node(self.boundjid, self.create_magnetlink_stanza().namespace)
         self.disconnect(wait=True)
 
 
