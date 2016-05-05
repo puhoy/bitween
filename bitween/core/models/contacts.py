@@ -31,18 +31,21 @@ class Contact:
 
         self.last_seen = ''
 
-        self.torrents = TorrentList()
+        self.torrents = {}
 
         self.lock = Lock()
 
-    def set_torrents(self, torrent_dict_list):
-        self.torrents = TorrentList()
+    def set_torrents(self, resource, torrent_dict_list):
+        self.torrents[resource] = TorrentList()
         for t in torrent_dict_list:
-            self.add_torrent(t['size'], t['hash'], t['name'], files=None)
+            self.add_torrent(resource, t['size'], t['hash'], t['name'], files=None)
 
-    def add_torrent(self, size, sha_hash, name='', files=None):
-        self.torrents.add(size=size, sha_hash=sha_hash, name=name, files=files)
+    def add_torrent(self, resource, size, sha_hash, name='', files=None):
+        self.torrents[resource].add(size=size, sha_hash=sha_hash, name=name, files=files)
 
     @property
     def torrents_as_dict(self):
-        return self.torrents.as_dict
+        ret = {}
+        for k in self.torrents.keys():
+            ret[k] = self.torrents[k].as_dict
+        return ret

@@ -44,12 +44,16 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.register_plugin('xep_0004')
         self.register_plugin('xep_0030')
+        #self.register_plugin('xep_0033')
         self.register_plugin('xep_0060')
         self.register_plugin('xep_0115')
         self.register_plugin('xep_0118')
         #self.register_plugin('xep_0128')
         self.register_plugin('xep_0163')
         self.register_plugin('shares', module=share_plugin)
+
+        self.auto_authorize = True
+        self.auto_subscribe = True
 
 
         self.name = 'xmpp_client_%s' % self.boundjid.bare
@@ -140,22 +144,27 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def on_magnet_links_publish(self, msg):
         """ handle incoming files """
         data = msg['pubsub_event']['items']['item']['payload']
-        logger.debug('got magnetlinks from %s' % msg['from'].full)
+        logger.debug('got magnetlinks from %s' % msg['from'])
         logger.debug('!!! MESSAGE: %s' % msg)
 
-        contact = contactlist.get_contact(str(msg['from'].full))
+        contact = contactlist.get_contact(str(msg['from']))
+        resource = data.attrib.get('resource', '')
+        ip = data.attrib.get('ip', '')
+        contact.ip_v4 = ip
         if data is not None:
             logger.debug('data: %s' % data)
-            contact.ip_v4 = data.attrib.get('ip', False)
             if contact.ip_v4:
-                contacts_torrents = []
+                resources_torrents = []
                 for d in data:
-                    hash = d.text
+                    #print('%s'% d)
+
+                    hash = d.attrib['hash']
                     size = d.attrib['size']
                     name = d.attrib['name']
-                    contacts_torrents.append({"hash": hash, "size": size, "name": name})
+                    resources_torrents.append({"hash": hash, "size": size, "name": name})
                 #logger.debug('setting new torrents: %s' % contacts_torrents)
-                contact.set_torrents(contacts_torrents)
+                contact.set_torrents(resource, resources_torrents)
+
         else:
             logger.debug('No item content')
 

@@ -34,6 +34,7 @@ class UserShares(BasePlugin):
 
         shares = UserSharesStanza()
         shares['ip'] = ip
+        shares['resource'] = self.xmpp.boundjid.resource
 
         for h in handles:
             if h.get('hash', False):
@@ -61,8 +62,9 @@ class UserShares(BasePlugin):
             callback -- Optional reference to a stream handler function. Will
                         be executed when a reply stanza is received.
         """
-        tune = UserSharesStanza()
-        return self.xmpp['xep_0163'].publish(tune,
+        shares = UserSharesStanza()
+        shares['resource'] = self.xmpp.boundjid.resource
+        return self.xmpp['xep_0163'].publish(shares,
                                              node=UserSharesStanza.namespace,
                                              ifrom=ifrom,
                                              block=block,
