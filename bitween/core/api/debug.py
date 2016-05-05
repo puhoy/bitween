@@ -11,10 +11,11 @@ def send_empty_handles():
     """
     publish('send_handles')
 
-@jsonrpc.method('debug.send_delete_node')
-def send_empty_handles():
+@jsonrpc.method('debug.resend_handles')
+def resend_handles():
     """
     debugging: send empty handles and dummy ip
     :return:
     """
-    publish('del_handles')
+    publish('update_magnetlinks')
+

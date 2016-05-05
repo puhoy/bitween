@@ -38,22 +38,12 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         # self.register_plugin('xep_0115')  # Entity Caps
         # self.register_plugin('xep_0163')  # pep
 
-        self.register_plugin('xep_0004')
-        self.register_plugin('xep_0030')
-        # self.register_plugin('xep_0033')
-        self.register_plugin('xep_0060')
-        self.register_plugin('xep_0115')
-        self.register_plugin('xep_0118')
-        # self.register_plugin('xep_0128')
-        self.register_plugin('xep_0163')
-        self.register_plugin('shares', module=share_plugin)
 
-        self.auto_authorize = True
-        self.auto_subscribe = True
+
+        #self.auto_authorize = True
+        #self.auto_subscribe = True
 
         self.name = 'xmpp_client_%s' % self.boundjid.bare
-        # all functions starting with on_
-        # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
 
         self.add_event_handler("session_start", self.start)
 
@@ -69,25 +59,26 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             event -- An empty dictionary. The session_start
                      event does not provide any additional
                      data.
+
         """
+        self.register_plugin('xep_0004')
+        self.register_plugin('xep_0030')
+        # self.register_plugin('xep_0033')
+        self.register_plugin('xep_0060')
+        #self.register_plugin('xep_0115')
+        self.register_plugin('xep_0118')
+        # self.register_plugin('xep_0128')
+        #self.register_plugin('xep_0163')
+        self.register_plugin('shares', module=share_plugin)
 
         logger.debug('sending presence & getting roster for %s' % self.boundjid)
 
         self.send_presence(ppriority=1)
         self.get_roster()
 
-        # from https://groups.google.com/forum/#!topic/sleekxmpp-discussion/KVs5lMzVP70
+        #self.on_update_magnetlinks()
 
-        logger.debug('sending presence & getting roster')
-
-        self.on_update_magnetlinks()
-
-        ## Generic pubsub event handlers for all nodes
-        #
         self.add_event_handler('shares_publish', self.on_magnet_links_publish)
-        # self.add_event_handler('pubsub_retract', handler)
-        # self.add_event_handler('pubsub_purge', handler)
-        # self.add_event_handler('pubsub_delete', handler)
 
         self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
 
@@ -118,18 +109,12 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         ip_address = '1.1.1.1'
         self['shares'].publish_shares(h, ip_address)
 
-    def on_del_handles(self):
-        """
-        for debugging purposes only
-
-        :return:
-        """
-        self['xep_0060'].purge(self.boundjid, self.create_magnetlink_stanza().namespace)
-        self['xep_0060'].delete_node(self.boundjid, self.create_magnetlink_stanza().namespace)
+        #for item in self.client_roster:
+        #    logger.debug('rosteritem: %s' % item)
+        #    logger.debug('rosteritem: %s' % self.client_roster[item])
 
     def on_update_magnetlinks(self):
-        logging.debug('publishing magnetlinks')
-        # self['xep_0163'].publish(self.create_magnetlink_stanza())
+        logger.debug('publishing shares')
         self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
     # @staticmethod
@@ -161,5 +146,5 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_exit(self):
         logger.debug('sending empty shares')
-        self['shares'].stop(handlelist.ip_address)
+        #self['shares'].stop(handlelist.ip_address)
         self.disconnect(wait=True)
