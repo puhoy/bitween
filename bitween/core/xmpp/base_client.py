@@ -56,7 +56,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
 
-
         self.add_event_handler("session_start", self.start)
 
     def start(self, event):
@@ -117,9 +116,11 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         :return:
         """
         from ..models import HandleList
-        h = HandleList([])
-        h.ip_address = '1.1.1.1'
-        self['xep_0163'].publish(self.create_magnetlink_stanza(h), ifrom=self.boundjid.full)
+        h = [{'name': 'test',
+             'hash': 'xxxxx',
+             'size': 100}]
+        ip_address = '1.1.1.1'
+        self['shares'].publish_shares(h, ip_address)
 
     def on_del_handles(self):
         """
@@ -133,7 +134,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
         #self['xep_0163'].publish(self.create_magnetlink_stanza())
-        self['shares'].publish_shares(handlelist, handlelist.ip_address, ifrom=self.boundjid.full)
+        self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
     #@staticmethod
     def on_magnet_links_publish(self, msg):
@@ -159,6 +160,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             logger.debug('No item content')
 
     def on_exit(self):
+        logger.debug('sending empty shares')
+        self['shares'].stop()
         self.disconnect(wait=True)
 
 

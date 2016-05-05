@@ -9,6 +9,7 @@ from xml.etree.ElementTree import tostring
 log = logging.getLogger(__name__)
 from sleekxmpp.xmlstream import register_stanza_plugin
 
+logger = logging.getLogger(__name__)
 
 class UserShares(BasePlugin):
     """
@@ -46,24 +47,24 @@ class UserShares(BasePlugin):
                                              timeout=timeout)
 
 
-def stop(self, ifrom=None, block=True, callback=None, timeout=None):
-    """
-    Clear existing user tune information to stop notifications.
+    def stop(self, ifrom=None, block=True, callback=None, timeout=None):
+        """
+        Clear existing user tune information to stop notifications.
 
-    Arguments:
-        ifrom    -- Specify the sender's JID.
-        block    -- Specify if the send call will block until a response
-                    is received, or a timeout occurs. Defaults to True.
-        timeout  -- The length of time (in seconds) to wait for a response
-                    before exiting the send call if blocking is used.
-                    Defaults to sleekxmpp.xmlstream.RESPONSE_TIMEOUT
-        callback -- Optional reference to a stream handler function. Will
-                    be executed when a reply stanza is received.
-    """
-    tune = UserSharesStanza()
-    return self.xmpp['xep_0163'].publish(tune,
-                                         node=UserShares.namespace,
-                                         ifrom=ifrom,
-                                         block=block,
-                                         callback=callback,
-                                         timeout=timeout)
+        Arguments:
+            ifrom    -- Specify the sender's JID.
+            block    -- Specify if the send call will block until a response
+                        is received, or a timeout occurs. Defaults to True.
+            timeout  -- The length of time (in seconds) to wait for a response
+                        before exiting the send call if blocking is used.
+                        Defaults to sleekxmpp.xmlstream.RESPONSE_TIMEOUT
+            callback -- Optional reference to a stream handler function. Will
+                        be executed when a reply stanza is received.
+        """
+        tune = UserSharesStanza()
+        return self.xmpp['xep_0163'].publish(tune,
+                                             node=UserSharesStanza.namespace,
+                                             ifrom=ifrom,
+                                             block=block,
+                                             callback=callback,
+                                             timeout=timeout)

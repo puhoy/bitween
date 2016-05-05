@@ -3,7 +3,7 @@ from . import ShareItem
 
 class UserSharesStanza(ElementBase):
     name = 'shares'
-    namespace = 'https://xmpp.kwoh.de/protocol/magnet_links'
+    namespace = 'https://xmpp.kwoh.de/protocol/shares'
     plugin_attrib = 'shares'
     interfaces = set(('ip',))
     sub_interfaces = interfaces
