@@ -138,13 +138,9 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     #@staticmethod
     def on_magnet_links_publish(self, msg):
         """ handle incoming files """
-        #logging.debug('magnetlinks: %s' % msg)
-        #logging.debug('Published item %s to %s:' % (
-        #    msg['pubsub_event']['items']['item']['id'],
-        #    msg['pubsub_event']['items']['node']))
         data = msg['pubsub_event']['items']['item']['payload']
         logger.debug('got magnetlinks from %s' % msg['from'].full)
-        logger.debug('magnetlinks: %s' % msg)
+        logger.debug('!!! MESSAGE: %s' % msg)
 
         contact = contactlist.get_contact(str(msg['from'].full))
         if data is not None:
@@ -161,7 +157,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                 contact.set_torrents(contacts_torrents)
         else:
             logger.debug('No item content')
-
 
     def on_exit(self):
         self.disconnect(wait=True)

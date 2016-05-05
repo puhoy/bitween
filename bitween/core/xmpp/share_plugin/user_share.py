@@ -2,10 +2,12 @@ import logging
 
 from sleekxmpp.plugins.base import BasePlugin
 from . import stanza
-from .stanza import UserSharesStanza
+from .stanza import UserSharesStanza, ShareItem
 from xml.etree import cElementTree as et
 from xml.etree.ElementTree import tostring
+
 log = logging.getLogger(__name__)
+from sleekxmpp.xmlstream import register_stanza_plugin
 
 
 class UserShares(BasePlugin):
@@ -16,7 +18,6 @@ class UserShares(BasePlugin):
     name = 'shares'
     description = 'UserShares'
     dependencies = set(['xep_0163'])
-    namespace = 'https://xmpp.kwoh.de/protocol/magnet_links'
     stanza = stanza
 
     def plugin_end(self):
@@ -25,20 +26,20 @@ class UserShares(BasePlugin):
 
     def session_bind(self, jid):
         self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
+        register_stanza_plugin(UserSharesStanza, ShareItem, iterable=True)
 
     def publish_shares(self, handles, ip, options=None,
                        ifrom=None, block=True, callback=None, timeout=None):
 
-        tune = UserSharesStanza()
-        tune['ip'] = ip
-        tune['shares'] = {}
+        shares = UserSharesStanza()
+        shares['ip'] = ip
 
         for h in handles:
-            # todo
-            tune['shares'] = tostring(et.Element("hash", size=str(h.get('total_size', 0)), name=h.get("name", "")))
+            if h.get('hash', False):
+                shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
 
-        return self.xmpp['xep_0163'].publish(tune,
-                                             node=UserShares.namespace,
+        return self.xmpp['xep_0163'].publish(shares,
+                                             node=UserSharesStanza.namespace,
                                              ifrom=ifrom,
                                              block=block,
                                              callback=callback,
@@ -59,9 +60,9 @@ def stop(self, ifrom=None, block=True, callback=None, timeout=None):
         callback -- Optional reference to a stream handler function. Will
                     be executed when a reply stanza is received.
     """
-    tune = UserTune()
+    tune = UserSharesStanza()
     return self.xmpp['xep_0163'].publish(tune,
-                                         node=UserTune.namespace,
+                                         node=UserShares.namespace,
                                          ifrom=ifrom,
                                          block=block,
                                          callback=callback,
