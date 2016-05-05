@@ -146,5 +146,5 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_exit(self):
         logger.debug('sending empty shares')
-        #self['shares'].stop(handlelist.ip_address)
+        self['shares'].stop(handlelist.ip_address)
         self.disconnect(wait=True)
