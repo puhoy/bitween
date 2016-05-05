@@ -5,19 +5,15 @@ import sys
 
 import sleekxmpp
 
-
 from bitween.pubsub import PubSubscriber
 
-
-
-from bitween.core.models import handlelist, contactlist
+from bitween.core.models import handlelist, user_shares
 
 import logging
 import random
 from . import share_plugin
 
 logger = logging.getLogger(__name__)
-
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -36,25 +32,24 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.settings = settings
         self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
-        #self.register_plugin('xep_0030')  # Service Discovery
+        # self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        #self.register_plugin('xep_0060')  # PubSub
-        #self.register_plugin('xep_0115')  # Entity Caps
-        #self.register_plugin('xep_0163')  # pep
+        # self.register_plugin('xep_0060')  # PubSub
+        # self.register_plugin('xep_0115')  # Entity Caps
+        # self.register_plugin('xep_0163')  # pep
 
         self.register_plugin('xep_0004')
         self.register_plugin('xep_0030')
-        #self.register_plugin('xep_0033')
+        # self.register_plugin('xep_0033')
         self.register_plugin('xep_0060')
         self.register_plugin('xep_0115')
         self.register_plugin('xep_0118')
-        #self.register_plugin('xep_0128')
+        # self.register_plugin('xep_0128')
         self.register_plugin('xep_0163')
         self.register_plugin('shares', module=share_plugin)
 
         self.auto_authorize = True
         self.auto_subscribe = True
-
 
         self.name = 'xmpp_client_%s' % self.boundjid.bare
         # all functions starting with on_
@@ -76,7 +71,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                      data.
         """
 
-
         logger.debug('sending presence & getting roster for %s' % self.boundjid)
 
         self.send_presence(ppriority=1)
@@ -87,7 +81,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         logger.debug('sending presence & getting roster')
 
         self.on_update_magnetlinks()
-
 
         ## Generic pubsub event handlers for all nodes
         #
@@ -112,7 +105,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-
     def on_send_handles(self):
         """
         for debugging purposes only
@@ -121,8 +113,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         """
         from ..models import HandleList
         h = [{'name': 'test',
-             'hash': 'xxxxx',
-             'size': 100}]
+              'hash': 'xxxxx',
+              'size': 100}]
         ip_address = '1.1.1.1'
         self['shares'].publish_shares(h, ip_address)
 
@@ -137,41 +129,37 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_magnetlinks(self):
         logging.debug('publishing magnetlinks')
-        #self['xep_0163'].publish(self.create_magnetlink_stanza())
+        # self['xep_0163'].publish(self.create_magnetlink_stanza())
         self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
-    #@staticmethod
+    # @staticmethod
     def on_magnet_links_publish(self, msg):
         """ handle incoming files """
         data = msg['pubsub_event']['items']['item']['payload']
         logger.debug('got magnetlinks from %s' % msg['from'])
         logger.debug('!!! MESSAGE: %s' % msg)
 
-        contact = contactlist.get_contact(str(msg['from']))
+        contact = str(msg['from'])
         resource = data.attrib.get('resource', '')
         ip = data.attrib.get('ip', '')
-        contact.ip_v4 = ip
+
+        # todo: ipv6
         if data is not None:
             logger.debug('data: %s' % data)
-            if contact.ip_v4:
-                resources_torrents = []
+            if ip:
+                user_shares.clear_shares(contact, resource)
+                res = user_shares.get_resource(contact, resource)
+                res['ip_v4'] = ip
                 for d in data:
-                    #print('%s'% d)
-
                     hash = d.attrib['hash']
                     size = d.attrib['size']
                     name = d.attrib['name']
-                    resources_torrents.append({"hash": hash, "size": size, "name": name})
-                #logger.debug('setting new torrents: %s' % contacts_torrents)
-                contact.set_torrents(resource, resources_torrents)
-
+                    logger.debug('adding %s' % hash)
+                    user_shares.add_share(jid=contact, resource=resource, hash=hash, name=name, size=size, files=[])
         else:
             logger.debug('No item content')
 
     def on_exit(self):
         logger.debug('sending empty shares')
-        self['shares'].stop()
+        self['shares'].stop(handlelist.ip_address)
         self.disconnect(wait=True)
-
-
-

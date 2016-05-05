@@ -1,5 +1,5 @@
 from bitween.core.models.torrent_handles import HandleList
-from bitween.core.models.contacts import ContactList
+from bitween.core.models.contacts import UserShares
 
 handlelist = HandleList([])
-contactlist = ContactList()
+user_shares = UserShares()

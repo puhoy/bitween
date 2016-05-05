@@ -48,25 +48,9 @@ class UserShares(BasePlugin):
                                              timeout=timeout)
 
 
-    def stop(self, ifrom=None, block=True, callback=None, timeout=None):
+    def stop(self, ip, ifrom=None, block=True, callback=None, timeout=None):
         """
         Clear existing user tune information to stop notifications.
-
-        Arguments:
-            ifrom    -- Specify the sender's JID.
-            block    -- Specify if the send call will block until a response
-                        is received, or a timeout occurs. Defaults to True.
-            timeout  -- The length of time (in seconds) to wait for a response
-                        before exiting the send call if blocking is used.
-                        Defaults to sleekxmpp.xmlstream.RESPONSE_TIMEOUT
-            callback -- Optional reference to a stream handler function. Will
-                        be executed when a reply stanza is received.
         """
-        shares = UserSharesStanza()
-        shares['resource'] = self.xmpp.boundjid.resource
-        return self.xmpp['xep_0163'].publish(shares,
-                                             node=UserSharesStanza.namespace,
-                                             ifrom=ifrom,
-                                             block=block,
-                                             callback=callback,
-                                             timeout=timeout)
+
+        self.publish_shares([], ip)

@@ -18,7 +18,7 @@ from .bt import *
 from .xmpp import *
 from .debug import *
 
-from ..models import contactlist
+from ..models import user_shares
 
 
 @jsonrpc.method('Api.versions')
@@ -42,12 +42,7 @@ def safe_exit():
 
 @jsonrpc.method('Api.get_all_torrents')
 def get_all_torrents():
-    d = {}
-    for k, v in contactlist.dict.iteritems():
-        logger.debug('contact %s' % k)
-        d[str(k)] = v.torrents_as_dict
-    return d
-
+    return user_shares.dict
 
 class JsonRpcAPI(Thread):
     def __init__(self, api_host='localhost', api_port=8080):

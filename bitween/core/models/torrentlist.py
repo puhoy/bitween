@@ -17,7 +17,7 @@ class Torrent:
         if files is None:
             files = []
         self.hash = sha_hash
-        self.names = [name]
+        self.name = name
 
         self.size = size
         self.files = files
@@ -25,16 +25,10 @@ class Torrent:
         self.jids_lastseen = []
         # {"jid": "", "last_seen": ""}
 
-    def add_name(self, name):
-        self.names.append(name)
-
-    def set_files(self, files):
-        self.files = files
-
     @property
     def as_dict(self):
         d = {"hash": self.hash,
-             "names": self.names,
+             "name": self.name,
              "size": self.size,
              "files": self.files}
         return d
@@ -54,8 +48,7 @@ class TorrentList:
                 if t.hash == sha_hash:
                     # we have this torrent, maybe we can add a filelist or name
                     if name:
-                        if name not in t.names:
-                            t.names.append(name)
+                        t.name = name
                     if files:
                         t.files = files
                     # t.jids_lastseen[jid] = time()
