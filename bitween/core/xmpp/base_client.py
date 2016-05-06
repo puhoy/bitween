@@ -24,28 +24,31 @@ else:
 
 class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password, settings={}):
-        sleekxmpp.ClientXMPP.__init__(self, jid, password)
         PubSubscriber.__init__(self, autosubscribe=True)
+        sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
         if not settings:
             settings = {}
 
         self.settings = settings
-        self.add_event_handler('magnet_links_publish', self.on_magnet_links_publish)
-        # self.register_plugin('xep_0030')  # Service Discovery
-        self.register_plugin('xep_0199')  # XMPP Ping
-        # self.register_plugin('xep_0060')  # PubSub
-        # self.register_plugin('xep_0115')  # Entity Caps
-        # self.register_plugin('xep_0163')  # pep
-
-
-
-        #self.auto_authorize = True
-        #self.auto_subscribe = True
-
-        self.name = 'xmpp_client_%s' % self.boundjid.bare
 
         self.add_event_handler("session_start", self.start)
+        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
+        self.add_event_handler('shares_publish', self.on_shares_publish)
+
+        self.register_plugin('xep_0004')
+        self.register_plugin('xep_0030')
+        self.register_plugin('xep_0060')
+        self.register_plugin('xep_0115')
+        self.register_plugin('xep_0118')
+        self.register_plugin('xep_0128')
+        self.register_plugin('xep_0163')
+        self.register_plugin('shares', module=share_plugin)
+
+        # self.auto_authorize = True
+        # self.auto_subscribe = True
+
+        self.name = 'xmpp_client_%s' % self.boundjid.bare
 
     def start(self, event):
         """
@@ -61,26 +64,13 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                      data.
 
         """
-        self.register_plugin('xep_0004')
-        self.register_plugin('xep_0030')
-        # self.register_plugin('xep_0033')
-        self.register_plugin('xep_0060')
-        #self.register_plugin('xep_0115')
-        self.register_plugin('xep_0118')
-        # self.register_plugin('xep_0128')
-        #self.register_plugin('xep_0163')
-        self.register_plugin('shares', module=share_plugin)
-
         logger.debug('sending presence & getting roster for %s' % self.boundjid)
 
-        self.send_presence(ppriority=1)
+        self.send_presence()
         self.get_roster()
+        self['xep_0115'].update_caps()
 
-        #self.on_update_magnetlinks()
-
-        self.add_event_handler('shares_publish', self.on_magnet_links_publish)
-
-        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
+        #self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
     def process_queue(self):
         '''
@@ -102,28 +92,21 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         :return:
         """
-        from ..models import HandleList
         h = [{'name': 'test',
               'hash': 'xxxxx',
               'size': 100}]
         ip_address = '1.1.1.1'
         self['shares'].publish_shares(h, ip_address)
 
-        #for item in self.client_roster:
-        #    logger.debug('rosteritem: %s' % item)
-        #    logger.debug('rosteritem: %s' % self.client_roster[item])
-
-    def on_update_magnetlinks(self):
+    def on_update_shares(self):
         logger.debug('publishing shares')
         self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
-    # @staticmethod
-    def on_magnet_links_publish(self, msg):
+    @staticmethod
+    def on_shares_publish(msg):
         """ handle incoming files """
         data = msg['pubsub_event']['items']['item']['payload']
         logger.debug('got magnetlinks from %s' % msg['from'])
-        logger.debug('!!! MESSAGE: %s' % msg)
-
         contact = str(msg['from'])
         resource = data.attrib.get('resource', '')
         ip = data.attrib.get('ip', '')

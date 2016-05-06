@@ -3,13 +3,12 @@ import logging
 from sleekxmpp.plugins.base import BasePlugin
 from . import stanza
 from .stanza import UserSharesStanza, ShareItem
-from xml.etree import cElementTree as et
-from xml.etree.ElementTree import tostring
 
 log = logging.getLogger(__name__)
 from sleekxmpp.xmlstream import register_stanza_plugin
 
 logger = logging.getLogger(__name__)
+
 
 class UserShares(BasePlugin):
     """
@@ -24,10 +23,11 @@ class UserShares(BasePlugin):
     def plugin_end(self):
         self.xmpp['xep_0030'].del_feature(feature=UserShares.namespace)
         self.xmpp['xep_0163'].remove_interest(UserShares.namespace)
+        pass
 
     def session_bind(self, jid):
-        self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
         register_stanza_plugin(UserSharesStanza, ShareItem, iterable=True)
+        self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
 
     def publish_shares(self, handles, ip, options=None,
                        ifrom=None, block=True, callback=None, timeout=None):
@@ -46,7 +46,6 @@ class UserShares(BasePlugin):
                                              block=block,
                                              callback=callback,
                                              timeout=timeout)
-
 
     def stop(self, ip, ifrom=None, block=True, callback=None, timeout=None):
         """

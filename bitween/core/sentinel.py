@@ -119,7 +119,7 @@ class Sentinel(Thread, PubSubscriber):
         """
         updates the list of handles and triggers all xmpp clients to send the new file list
         """
-        self.publish('update_magnetlinks')  # call method on xmpp clients
+        self.publish('update_shares')  # call method on xmpp clients
         pass
 
     def on_exit(self):

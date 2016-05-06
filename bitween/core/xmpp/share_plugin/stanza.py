@@ -5,7 +5,7 @@ class UserSharesStanza(ElementBase):
     name = 'shares'
     namespace = 'https://xmpp.kwoh.de/protocol/shares'
     plugin_attrib = 'shares'
-    interfaces = set(('ip', 'resource'))
+    interfaces = set(['ip', 'resource'])
     #sub_interfaces = interfaces
 
     def add_share(self, hash, name='', size=0):

@@ -7,5 +7,5 @@ class ShareItem(ElementBase):
     name = 'share'
     namespace = 'https://xmpp.kwoh.de/protocol/shares#item'
     plugin_attrib = 'share'
-    interfaces = set(('name', 'hash', 'size'))
+    interfaces = set(['name', 'hash', 'size'])
     plugin_multi_attrib = 'shares'
