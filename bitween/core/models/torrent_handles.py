@@ -15,15 +15,16 @@ class HandleList:
     """
 
     def __init__(self, handles):
+
         self.list = []
         self.lock = Lock()
-        self.ip_address = ''
-        self.rebuild(handles)
+        self.handles_ref = handles
+        self.rebuild()
 
-    def rebuild(self, handles):
-        logger.debug(self.list)
+    def rebuild(self):
+        #logger.debug(self.list)
         self.list = []
-        for handle in handles:
+        for handle in self.handles_ref:
             self.add(handle)
 
     def add(self, handle):

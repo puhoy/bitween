@@ -7,7 +7,7 @@ import sleekxmpp
 
 from bitween.pubsub import PubSubscriber
 
-from bitween.core.models import handlelist, user_shares
+from bitween.core.models import own_shares, user_shares
 
 import logging
 import random
@@ -23,14 +23,10 @@ else:
 
 
 class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
-    def __init__(self, jid, password, settings={}):
+    def __init__(self, jid, password):
         PubSubscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
-        if not settings:
-            settings = {}
-
-        self.settings = settings
 
         self.add_event_handler("session_start", self.start)
         self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
@@ -100,7 +96,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_shares(self):
         logger.debug('publishing shares')
-        self['shares'].publish_shares(handlelist, handlelist.ip_address)
+        self['shares'].publish_shares(own_shares, own_shares.ip_address)
 
     @staticmethod
     def on_shares_publish(msg):
@@ -129,5 +125,5 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_exit(self):
         logger.debug('sending empty shares')
-        self['shares'].stop(handlelist.ip_address)
+        self['shares'].stop(own_shares.ip_address)
         self.disconnect(wait=True)

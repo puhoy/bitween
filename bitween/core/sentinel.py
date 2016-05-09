@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 from bitween.pubsub import PubSubscriber
 from bitween.core.api import JsonRpcAPI
 import ipgetter
+from models.addresses import get_ip_addresses
+from models import addresses
 
 def create_xmpp_client(jid, password):
     c = XmppClient(jid, password)
@@ -25,7 +27,7 @@ def create_torrent_client():
 
 
 from . import conf
-from bitween.core.models import handlelist
+from bitween.core.models import own_shares
 
 
 class Sentinel(Thread, PubSubscriber):
@@ -35,8 +37,6 @@ class Sentinel(Thread, PubSubscriber):
     xmpp_clients = []
     bt_client = {}
 
-    files = handlelist
-
     def __init__(self, api_host, api_port=8080):
         Thread.__init__(self)
         PubSubscriber.__init__(self, autosubscribe=True)
@@ -44,35 +44,9 @@ class Sentinel(Thread, PubSubscriber):
         # all functions starting with on_
         # modified from http://stackoverflow.com/questions/1911281/how-do-i-get-list-of-methods-in-a-python-class
 
-
         self.api = JsonRpcAPI(api_host, api_port)
-
         self.end = False
-
-        self.ip_v4 = ''
-        self.ip_v6 = ''
         self.got_ip = False
-
-    def get_ip_address(self, ipv4='', ipv6=''):
-        """
-        listen for ip from libtorrent
-
-        :param ipv4:
-        :param ipv6:
-        :return:
-        """
-        logger.debug('getting own external ip...')
-        # todo: this is ipv4 only
-        self.ip_v4 = ipv4
-        self.ip_v6 = ipv6
-
-        self.ip_v4 = ipgetter.myip()
-
-        if self.ip_v6 or self.ip_v4:
-            self.got_ip = True
-            logger.debug('got ip: %s' % self.ip_v4)
-            handlelist.ip_address = self.ip_v4
-            self.add_bt_client()
 
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
@@ -84,9 +58,8 @@ class Sentinel(Thread, PubSubscriber):
         self.bt_client = {'client': c}
 
     def run(self):
-        #self.add_bt_client()
-        self.get_ip_address()
         self.api.start()
+        self.add_bt_client()
         logger.debug('starting loop')
         while not self.end:
             # news?
@@ -103,6 +76,12 @@ class Sentinel(Thread, PubSubscriber):
         logging.info('quitting')
 
     def on_bt_ready(self):
+        found_addresses = get_ip_addresses()
+        addresses.ip_v6 = found_addresses['ip_v6']
+        addresses.ip_v4 = found_addresses['ip_v4']
+        addresses.ports =
+
+    def on_got_addresses_ready(self):
         """
 
         :return:
@@ -130,6 +109,5 @@ class Sentinel(Thread, PubSubscriber):
 
         # for c in self.xmpp_clients:
         #    c['client'].join()
-        # todo: this breaks sleekxmpp while quitting, but i think it should join (?)
 
         self.end = True

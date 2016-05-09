@@ -2,8 +2,6 @@ import logging
 from threading import Lock
 from time import time
 
-from .torrentlist import TorrentList
-
 logger = logging.getLogger(__name__)
 
 
@@ -81,3 +79,29 @@ class UserShares:
     def __delitem__(self, key):
         with self.lock:
             del self.dict[key]
+
+    @property
+    def hashes(self):
+        """
+        returns a dict with all hashes and a list of ips for each hash
+
+        :return:
+        """
+        h = {}
+        for user in self.dict.keys():
+            logger.debug(user)
+            for resource in self.dict[user].keys():
+                logger.debug(resource)
+                for share in self.dict[user][resource]['shares']:
+                    logger.debug(share)
+                    hash = self.dict[user][resource]['shares'][share]['hash']
+                    if not h.get(hash, False):
+                        h[hash] = {'ip_v4': [],
+                                   'ip_v6': []}
+                    if self.dict[user][resource]['ip_v4']:
+                        if self.dict[user][resource]['ip_v4'] not in h[hash]['ip_v4']:
+                            h[hash]['ip_v4'].append(self.dict[user][resource]['ip_v4'])
+                    if self.dict[user][resource]['ip_v6']:
+                        if self.dict[user][resource]['ip_v6'] not in h[hash]['ip_v6']:
+                            h[hash]['ip_v6'].append(self.dict[user][resource]['ip_v6'])
+        return h

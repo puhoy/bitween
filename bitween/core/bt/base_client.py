@@ -11,8 +11,8 @@ from types import FunctionType
 import libtorrent as lt
 
 from bitween.pubsub import PubSubscriber
-from ..models import HandleList
-from bitween.core.models import handlelist
+from ..models import user_shares
+from bitween.core.models import own_shares
 
 logger = logging.getLogger(__name__)
 
@@ -265,12 +265,12 @@ class TorrentClient(Thread, PubSubscriber):
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 elif alert.what() == "torrent_update_alert":
-                    handlelist.rebuild(self.handles)
+                    own_shares.rebuild(self.handles)
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    handlelist.rebuild(self.handles)
+                    own_shares.rebuild(self.handles)
                 elif (alert.what() == "stats_alert"):
                     pass
                 elif alert.what() == "external_ip_alert":  # todo
@@ -302,13 +302,13 @@ class TorrentClient(Thread, PubSubscriber):
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
-                    handlelist.rebuild(self.handles)
+                    own_shares.rebuild(self.handles)
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                     logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    handlelist.rebuild(self.handles)
+                    own_shares.rebuild(self.handles)
                 elif (alert.what() == "stats_alert"):
                     pass
                 else:
@@ -347,6 +347,23 @@ class TorrentClient(Thread, PubSubscriber):
             return True
         else:
             return False
+
+    def on_add_hash(self, hash, save_path):
+        mlink = 'magnet:?xt=urn:btih:%s' % hash
+        params = {
+            'save_path': save_path,
+            'duplicate_is_error': True
+        }
+        link = mlink
+        handle = lt.add_magnet_uri(self.session, link, params)
+        self.handles.append(handle)
+        own_shares.rebuild(self.handles)
+
+        for ip in user_shares.hashes[hash]['ip_v4']:
+            handle.connect_peer((ip, 6881), 0)
+
+        self.publish('new_handle')
+
 
     def on_add_magnetlink(self, magnetlink, save_path):
         """
@@ -389,7 +406,7 @@ class TorrentClient(Thread, PubSubscriber):
         # logger.debug('added handle-hash %s' % info.info_hash())
 
         self.handles.append(handle)
-        handlelist.rebuild(self.handles)
+        own_shares.rebuild(self.handles)
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -424,7 +441,7 @@ class TorrentClient(Thread, PubSubscriber):
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.append(handle)
-        handlelist.rebuild(self.handles)
+        own_shares.rebuild(self.handles)
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -513,9 +530,9 @@ class TorrentClient(Thread, PubSubscriber):
         # load state
         db = sqlite3.connect(self.statdb)
         c = db.cursor()
-        #erg = c.execute("SELECT * FROM sessionstatus")
-        #f = erg.fetchone()
-        #if f:
+        # erg = c.execute("SELECT * FROM sessionstatus")
+        # f = erg.fetchone()
+        # if f:
         #    encsettings = f[1]
         #    settings = lt.bdecode(bytes(encsettings))
         #    self.session.load_state(settings)
