@@ -1,11 +1,13 @@
 from sleekxmpp.xmlstream import ElementBase
 
-class ShareItem(ElementBase):
+
+
+class AddressStanza(ElementBase):
     """
     substanza for UserSharesStanza, one object represents one share
     """
     name = 'address'
-    namespace = 'https://xmpp.kwoh.de/protocol/shares#address'
+    namespace = 'https://xmpp.kwoh.de/protocol/shares'
     plugin_attrib = 'address'
-    interfaces = set(['address', 'type'])
+    interfaces = set(['address', 'port'])
     plugin_multi_attrib = 'addresses'

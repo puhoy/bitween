@@ -7,7 +7,7 @@ import sleekxmpp
 
 from bitween.pubsub import PubSubscriber
 
-from bitween.core.models import own_shares, user_shares
+from bitween.core.models import own_shares, user_shares, addresses_ports
 
 import logging
 import random
@@ -96,34 +96,39 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_update_shares(self):
         logger.debug('publishing shares')
-        self['shares'].publish_shares(own_shares, own_shares.ip_address)
+        self['shares'].publish_shares(own_shares, addresses_ports)
 
     @staticmethod
     def on_shares_publish(msg):
         """ handle incoming files """
-        data = msg['pubsub_event']['items']['item']['payload']
+        shares = msg['pubsub_event']['items']['item']['shares']
+        addresses = msg['pubsub_event']['items']['item']['addresses']
+
+        logger.debug('addresses: %s' % msg['pubsub_event']['items']['item']['shares']['addresses'])
+        logger.debug('shares: %s' % msg['pubsub_event']['items']['item']['shares']['share_items'])
+
+        logger.debug('addr: %s' % addresses)
+
         logger.debug('got magnetlinks from %s' % msg['from'])
         contact = str(msg['from'])
-        resource = data.attrib.get('resource', '')
-        ip = data.attrib.get('ip', '')
+        resource = shares.attrib.get('resource', '')
 
-        # todo: ipv6
-        if data is not None:
-            logger.debug('data: %s' % data)
-            if ip:
-                user_shares.clear_shares(contact, resource)
-                res = user_shares.get_resource(contact, resource)
-                res['ip_v4'] = ip
-                for d in data:
-                    hash = d.attrib['hash']
-                    size = d.attrib['size']
-                    name = d.attrib['name']
-                    logger.debug('adding %s' % hash)
-                    user_shares.add_share(jid=contact, resource=resource, hash=hash, name=name, size=size, files=[])
+        if shares is not None:
+
+            user_shares.clear_shares(contact, resource)
+            user_shares.clear_addresses(contact, resource)
+
+            res = user_shares.get_resource(contact, resource)
+            for d in shares:
+                hash = d.attrib['hash']
+                size = d.attrib['size']
+                name = d.attrib['name']
+                logger.debug('adding %s' % hash)
+                user_shares.add_share(jid=contact, resource=resource, hash=hash, name=name, size=size, files=[])
         else:
             logger.debug('No item content')
 
     def on_exit(self):
         logger.debug('sending empty shares')
-        self['shares'].stop(own_shares.ip_address)
+        self['shares'].stop()
         self.disconnect(wait=True)

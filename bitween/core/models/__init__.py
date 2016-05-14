@@ -4,4 +4,4 @@ from bitween.core.models.addresses import Addresses
 
 own_shares = HandleList([])
 user_shares = UserShares()
-addresses = Addresses()
+addresses_ports = Addresses()

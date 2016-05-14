@@ -14,7 +14,6 @@ if not os.path.isdir(save_path):
     os.mkdir(save_path)
 
 
-own_ip = ''
 """
 http://stackoverflow.com/questions/6319207/are-lists-thread-safe
 

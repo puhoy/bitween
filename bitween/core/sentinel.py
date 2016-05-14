@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 from bitween.pubsub import PubSubscriber
 from bitween.core.api import JsonRpcAPI
 import ipgetter
-from models.addresses import get_ip_addresses
-from models import addresses
+from bitween.core.models import addresses_ports
 
 def create_xmpp_client(jid, password):
     c = XmppClient(jid, password)
@@ -48,6 +47,8 @@ class Sentinel(Thread, PubSubscriber):
         self.end = False
         self.got_ip = False
 
+        self.addresses = addresses_ports
+
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
         c = create_xmpp_client(jid=jid, password=password)
@@ -76,16 +77,7 @@ class Sentinel(Thread, PubSubscriber):
         logging.info('quitting')
 
     def on_bt_ready(self):
-        found_addresses = get_ip_addresses()
-        addresses.ip_v6 = found_addresses['ip_v6']
-        addresses.ip_v4 = found_addresses['ip_v4']
-        addresses.ports =
-
-    def on_got_addresses_ready(self):
-        """
-
-        :return:
-        """
+        self.addresses.port = self.bt_client['client'].session.listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
         self.publish('update_magnetlinks')

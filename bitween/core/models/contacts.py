@@ -4,6 +4,30 @@ from time import time
 
 logger = logging.getLogger(__name__)
 
+import socket
+
+# check methods from http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
+def is_valid_ipv4_address(address):
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+    except AttributeError:  # no inet_pton here, sorry
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            return False
+        return address.count('.') == 3
+    except socket.error:  # not a valid address
+        return False
+
+    return True
+
+def is_valid_ipv6_address(address):
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+    except socket.error:  # not a valid address
+        return False
+    return True
+
 
 class UserShares:
     def __init__(self):
@@ -12,8 +36,9 @@ class UserShares:
         self.dict = {
             'user@server': {
                 'resource': {
-                    "ip_v4": '',
-                    "ip_v6": '',
+                    "ip_v4": [],
+                    "ip_v6": [],
+                    "port": 0
                     "shares": {
                         'some_hash': {
                             'hash': 'some_hash',
@@ -42,6 +67,26 @@ class UserShares:
                               'shares': {}
                               }
         return user.get(resource)
+
+    def set_port(self, jid, resource, port):
+        res = self.get_resource(jid, resource)
+        res['port'] = port
+
+    def add_address(self, jid, resource, address):
+        res = self.get_resource(jid, resource)
+        if is_valid_ipv4_address(address):
+            res['ip_v4'].append(address)
+        elif is_valid_ipv6_address(address):
+            res['ip_v6'].append(address)
+        else:
+            logger.error('invalid address: %s' % address)
+
+
+    def clear_addresses(self, jid, resource):
+        res = self.get_resource(jid, resource)
+        res['ip_v4'] = []
+        res['ip_v6'] = []
+        res["port"] = 0
 
     def clear_shares(self, jid, resource):
         """

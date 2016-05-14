@@ -18,13 +18,13 @@ class HandleList:
 
         self.list = []
         self.lock = Lock()
-        self.handles_ref = handles
-        self.rebuild()
+        self.handles = handles
+        self.rebuild(self.handles)
 
-    def rebuild(self):
+    def rebuild(self, handles):
         #logger.debug(self.list)
         self.list = []
-        for handle in self.handles_ref:
+        for handle in handles:
             self.add(handle)
 
     def add(self, handle):

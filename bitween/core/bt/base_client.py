@@ -13,6 +13,7 @@ import libtorrent as lt
 from bitween.pubsub import PubSubscriber
 from ..models import user_shares
 from bitween.core.models import own_shares
+#from bitween.core.models import addresses_ports
 
 logger = logging.getLogger(__name__)
 
