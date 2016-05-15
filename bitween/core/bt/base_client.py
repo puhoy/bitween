@@ -570,6 +570,27 @@ class TorrentClient(Thread, PubSubscriber):
     def set_shares(self):
         infos = []
         for handle in self.handles:
-            infos.append(handle.get_torrent_info())
+            info = handle.get_torrent_info()
+            h = {}
+
+            # h['handle'] = '%s' % handle
+            h['files'] = []
+            h['total_size'] = info.total_size()
+
+            h['name'] = info.name()
+            h['hash'] = '%s' % info.info_hash()
+
+            try:
+                files = info.files()  # the filestore object
+            except:
+                files = []
+
+            for f in files:
+                h['files'].append(
+                    {
+                        'path': f.path,  # filename for file at index f
+                        # 'size': files.file_size(f)
+                    })
+            infos.append(h)
+
         own_shares.rebuild(infos)
-        

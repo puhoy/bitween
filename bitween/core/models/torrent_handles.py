@@ -27,41 +27,11 @@ class OwnShares:
         for info in torrentinfo_list:
             self.add(info)
 
-    def add(self, info):
-        logger.debug('added file %s', info.name())
+    def add(self, info_dict):
+        logger.debug('added file %s', info_dict['name'])
         with self.lock:
-            #info = handle.get_torrent_info()
-            h = {}
-
-            #h['handle'] = '%s' % handle
-            h['files'] = []
-
-            try:
-                h['total_size'] = info.total_size()
-            except:
-                h['total_size'] = 0
-            try:
-                h['name'] = info.name()
-            except:
-                h['name'] = ''
-            try:
-                h['hash'] = '%s' % info.info_hash()
-            except:
-                h['hash'] = ''
-
-            try:
-                files = info.files()  # the filestore object
-            except:
-                files = []
-
-            for f in files:
-                h['files'].append(
-                    {
-                        'path': f.path,  # filename for file at index f
-                        # 'size': files.file_size(f)
-                    })
-            logger.info('new files: %s' % h)
-            self.list.append(h)
+            #logger.info('new files: %s' % h)
+            self.list.append(info_dict)
 
     def get(self, handle):
         with self.lock:
