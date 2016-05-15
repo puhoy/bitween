@@ -56,11 +56,16 @@ def get_ip_addresses():
     # v6
     # get from system
     ip_v6 = []
+
     for interface in netifaces.interfaces():
-        addresses = netifaces.ifaddresses(interface)[netifaces.AF_INET6]
-        for address in addresses:
-            if is_global(address['addr']):
-                ip_v6.append(address['addr'])
+        try:
+            addresses = netifaces.ifaddresses(interface)[netifaces.AF_INET6]
+            for address in addresses:
+                if is_global(address['addr']):
+                    ip_v6.append(address['addr'])
+        except KeyError as e:
+            logger.debug('Error while getting address from interface %s: %s' % (interface, e))
+
     return {'ip_v4': [ip_v4],
             'ip_v6': ip_v6}
 
