@@ -266,12 +266,12 @@ class TorrentClient(Thread, PubSubscriber):
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 elif alert.what() == "torrent_update_alert":
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 elif alert.what() == "external_ip_alert":  # todo
@@ -303,13 +303,13 @@ class TorrentClient(Thread, PubSubscriber):
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                     logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 else:
@@ -360,7 +360,7 @@ class TorrentClient(Thread, PubSubscriber):
         handle = lt.add_magnet_uri(self.session, link, params)
         self.handles.append(handle)
         logger.debug('rebuilding handle list')
-        own_shares.rebuild(self.handles)
+        self.set_shares()
         logger.debug('adding peers to handle...')
         for addr_tuple in user_shares.hashes[hash]:
             logger.debug('adding peer to %s: %s:%s' % (hash, addr_tuple[0], addr_tuple[1]))
@@ -410,7 +410,7 @@ class TorrentClient(Thread, PubSubscriber):
         # logger.debug('added handle-hash %s' % info.info_hash())
 
         self.handles.append(handle)
-        own_shares.rebuild(self.handles)
+        self.set_shares()
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -445,7 +445,7 @@ class TorrentClient(Thread, PubSubscriber):
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.append(handle)
-        own_shares.rebuild(self.handles)
+        self.set_shares()
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -566,3 +566,10 @@ class TorrentClient(Thread, PubSubscriber):
         c.execute("DELETE FROM torrents")
         db.commit()
         db.close()
+
+    def set_shares(self):
+        infos = []
+        for handle in self.handles:
+            infos.append(handle.get_torrent_info())
+        own_shares.rebuild(infos)
+        

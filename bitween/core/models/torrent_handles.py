@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 from libtorrent import make_magnet_uri
 
 
-class HandleList:
+class OwnShares:
     """
     holds a reference to the handles and some values for other threads
 
@@ -21,19 +21,19 @@ class HandleList:
         self.handles = handles
         self.rebuild(self.handles)
 
-    def rebuild(self, handles):
+    def rebuild(self, torrentinfo_list):
         #logger.debug(self.list)
         self.list = []
-        for handle in handles:
-            self.add(handle)
+        for info in torrentinfo_list:
+            self.add(info)
 
-    def add(self, handle):
-        logger.debug('added file %s', handle.name())
+    def add(self, info):
+        logger.debug('added file %s', info.name())
         with self.lock:
-            info = handle.get_torrent_info()
+            #info = handle.get_torrent_info()
             h = {}
 
-            h['handle'] = '%s' % handle
+            #h['handle'] = '%s' % handle
             h['files'] = []
 
             try:
@@ -41,17 +41,13 @@ class HandleList:
             except:
                 h['total_size'] = 0
             try:
-                h['name'] = handle.name()
+                h['name'] = info.name()
             except:
                 h['name'] = ''
             try:
-                h['hash'] = '%s' % handle.info_hash()
+                h['hash'] = '%s' % info.info_hash()
             except:
                 h['hash'] = ''
-            try:
-                h['mlink'] = '%s' % make_magnet_uri(handle)
-            except:
-                h['mlink'] = ''
 
             try:
                 files = info.files()  # the filestore object
