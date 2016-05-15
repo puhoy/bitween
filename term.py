@@ -61,13 +61,20 @@ def list():
     for h, v in hashes.iteritems():
         print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
 
-def add(hash, dest=None):
+def add_hash(hash, dest=None):
     if not dest:
         dest = json.load(open('conf.json'))['save_path']
-    method = "bt.add_torrent_by_hash",
+    method = "bt.add_torrent_by_hash"
     params = {
       "hash": hash,
       "save_path": dest
+    }
+    print(post(method, params))
+
+def add_file(path):
+    method = "bt.add_file"
+    params = {
+      "file": path
     }
     print(post(method, params))
 
@@ -78,6 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--bind", default='localhost')
     parser.add_argument("--exit", default=False, action='store_true')
     parser.add_argument("--list", default=False, action='store_true')
+    parser.add_argument("--add_hash", default=False, action='store_true')
+    parser.add_argument("--add_file", default=False, action='store_true')
     parser.add_argument("--debug", default=False, action='store_true')
 
     args = parser.parse_args()
@@ -89,5 +98,9 @@ if __name__ == "__main__":
         exit()
     elif args.list:
         list()
+    elif args.add_hash:
+        add_hash()
+    elif args.add_file:
+        add_file()
 
 
