@@ -356,14 +356,16 @@ class TorrentClient(Thread, PubSubscriber):
             'duplicate_is_error': True
         }
         link = mlink
+        logger.debug('adding new handly by magnetlink')
         handle = lt.add_magnet_uri(self.session, link, params)
         self.handles.append(handle)
+        logger.debug('rebuilding handle list')
         own_shares.rebuild(self.handles)
-
+        logger.debug('adding peers to handle...')
         for addr_tuple in user_shares.hashes[hash]:
             logger.debug('adding peer to %s: %s:%s' % (hash, addr_tuple[0], addr_tuple[1]))
             handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
-
+        logger.debug('done!')
         self.publish('new_handle')
 
 

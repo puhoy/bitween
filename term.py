@@ -62,12 +62,13 @@ def list():
         print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
 
 def add_hash(hash, dest=None):
+    import os
     if not dest:
         dest = json.load(open('conf.json'))['save_path']
     method = "bt.add_torrent_by_hash"
     params = {
       "hash": hash,
-      "save_path": dest
+      "save_path": os.path.abspath(dest)
     }
     print(post(method, params))
 
