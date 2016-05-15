@@ -30,7 +30,7 @@ class HandleList:
     def add(self, handle):
         logger.debug('added file %s', handle.name())
         with self.lock:
-            info = handle.torrent_file()
+            info = handle.get_torrent_info()
             h = {}
 
             h['handle'] = '%s' % handle
