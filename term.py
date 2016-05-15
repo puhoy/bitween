@@ -99,8 +99,8 @@ if __name__ == "__main__":
     elif args.list:
         list()
     elif args.add_hash:
-        add_hash()
+        add_hash(args.add_hash)
     elif args.add_file:
-        add_file()
+        add_file(args.add_file)
 
 
