@@ -360,8 +360,9 @@ class TorrentClient(Thread, PubSubscriber):
         self.handles.append(handle)
         own_shares.rebuild(self.handles)
 
-        for ip in user_shares.hashes[hash]['ip_v4']:
-            handle.connect_peer((ip, 6881), 0)
+        for addr_tuple in user_shares.hashes[hash]:
+            logger.debug('adding peer to %s: %s:%s' % (hash, addr_tuple[0], addr_tuple[1]))
+            handle.connect_peer((addr_tuple[0], addr_tuple[1]), 0)
 
         self.publish('new_handle')
 

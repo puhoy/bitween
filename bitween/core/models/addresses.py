@@ -40,12 +40,13 @@ class Addresses:
 
 def get_ip_addresses():
     # v4
-
+    # todo: this works, but there are more possibilities to get the ip
     ## ask xmpp
     ## ipgetter
 
     ip_v4 = ""
     while not ip_v4:
+        logger.debug('getting ip...')
         ip_v4 = ipgetter.myip()
         logger.debug('ipgetter got %s' % ip_v4)
 
