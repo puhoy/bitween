@@ -362,7 +362,7 @@ class TorrentClient(Thread, PubSubscriber):
 
         for addr_tuple in user_shares.hashes[hash]:
             logger.debug('adding peer to %s: %s:%s' % (hash, addr_tuple[0], addr_tuple[1]))
-            handle.connect_peer((addr_tuple[0], addr_tuple[1]), 0)
+            handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
 
         self.publish('new_handle')
 

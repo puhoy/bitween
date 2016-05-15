@@ -80,7 +80,7 @@ class Sentinel(Thread, PubSubscriber):
         self.addresses.port = self.bt_client['client'].session.listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
-        self.publish('update_magnetlinks')
+        self.publish('update_shares')
 
     def on_add_file(self, file):
         logger.debug('adding file')
