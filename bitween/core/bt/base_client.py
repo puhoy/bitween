@@ -261,11 +261,12 @@ class TorrentClient(Thread, PubSubscriber):
                 # self.torrent_updated.emit(handle, handle.status())
 
             for alert in self.session.pop_alerts():
-
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 elif alert.what() == "torrent_update_alert":
+                    self.set_shares()
+                elif alert.what() == "state_update_alert":
                     self.set_shares()
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
@@ -359,8 +360,6 @@ class TorrentClient(Thread, PubSubscriber):
         logger.debug('adding new handly by magnetlink')
         handle = lt.add_magnet_uri(self.session, link, params)
         self.handles.append(handle)
-        logger.debug('rebuilding handle list')
-        self.set_shares()
         logger.debug('adding peers to handle...')
         for addr_tuple in user_shares.hashes[hash]:
             logger.debug('adding peer to %s: %s:%s' % (hash, addr_tuple[0], addr_tuple[1]))
@@ -570,27 +569,31 @@ class TorrentClient(Thread, PubSubscriber):
     def set_shares(self):
         infos = []
         for handle in self.handles:
-            info = handle.get_torrent_info()
-            h = {}
-
-            # h['handle'] = '%s' % handle
-            h['files'] = []
-            h['total_size'] = info.total_size()
-
-            h['name'] = info.name()
-            h['hash'] = '%s' % info.info_hash()
-
             try:
-                files = info.files()  # the filestore object
-            except:
-                files = []
+                info = handle.get_torrent_info()
+                h = {}
 
-            for f in files:
-                h['files'].append(
-                    {
-                        'path': f.path,  # filename for file at index f
-                        # 'size': files.file_size(f)
-                    })
-            infos.append(h)
+                # h['handle'] = '%s' % handle
+                h['files'] = []
+                h['total_size'] = info.total_size()
+
+                h['name'] = info.name()
+                h['hash'] = '%s' % info.info_hash()
+
+                try:
+                    files = info.files()  # the filestore object
+                except:
+                    files = []
+
+                for f in files:
+                    h['files'].append(
+                        {
+                            'path': f.path,  # filename for file at index f
+                            # 'size': files.file_size(f)
+                        })
+                infos.append(h)
+            except Exception as e:
+                logger.error('error while building torrent list: %s' % e)
+
 
         own_shares.rebuild(infos)
