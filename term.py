@@ -85,8 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--bind", default='localhost')
     parser.add_argument("--exit", default=False, action='store_true')
     parser.add_argument("--list", default=False, action='store_true')
-    parser.add_argument("--add_hash", default=False, action='store_true')
-    parser.add_argument("--add_file", default=False, action='store_true')
+    parser.add_argument("--add_hash")
+    parser.add_argument("--add_file")
     parser.add_argument("--debug", default=False, action='store_true')
 
     args = parser.parse_args()
