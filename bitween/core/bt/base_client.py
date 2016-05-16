@@ -65,7 +65,7 @@ class TorrentClient(Thread, PubSubscriber):
         self.setup_db()
 
         logger.info('listening on port %s' % self.session.listen_port())
-        logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
+        #logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
         self.name = 'bt'
         self.publish('bt_ready')
