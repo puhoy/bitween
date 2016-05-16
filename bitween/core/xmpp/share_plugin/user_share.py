@@ -42,13 +42,11 @@ class UserShares(BasePlugin):
                     shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
 
         if addresses:
-            for v4 in addresses.ip_v4:
-                logger.debug('adding v4 address: %s' % v4)
-                shares.add_address(v4, port=addresses.port)
+            for addr in addresses.ip_v4 + addresses.ip_v6:
+                for port in addresses.ports + addresses.nat_ports:
+                    logger.debug('adding address: %s:%s' % (addr, port))
+                    shares.add_address(addr, port=port)
 
-            for v6 in addresses.ip_v6:
-                logger.debug('adding v6 address: %s' % v6)
-                shares.add_address(v6, port=addresses.port)
 
         return self.xmpp['xep_0163'].publish(shares,
                                              node=UserSharesStanza.namespace,

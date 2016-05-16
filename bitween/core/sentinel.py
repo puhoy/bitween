@@ -77,10 +77,16 @@ class Sentinel(Thread, PubSubscriber):
         logging.info('quitting')
 
     def on_bt_ready(self):
-        self.addresses.port = self.bt_client['client'].session.listen_port()
+        self.addresses.ports.append(self.bt_client['client'].session.listen_port())
         #self.addresses.port = self.bt_client['client'].session.ssl_listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
+        self.publish('update_shares')
+
+    def on_set_port(self, port):
+        logger.debug('setting external port to %s' % port)
+        self.addresses.nat_ports.append(port)
+        logger.debug('new nat port list: %s' % self.addresses.nat_ports)
         self.publish('update_shares')
 
     def on_add_file(self, file):

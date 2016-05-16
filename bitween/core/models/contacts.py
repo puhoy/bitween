@@ -71,17 +71,12 @@ class UserShares:
                               }
         return user.get(resource)
 
-    def set_port(self, jid, resource, port):
-        res = self.get_resource(jid, resource)
-        res['port'] = port
-        self.dict.commit()
-
-    def add_address(self, jid, resource, address):
+    def add_address(self, jid, resource, address, port):
         res = self.get_resource(jid, resource)
         if is_valid_ipv4_address(address):
-            res['ip_v4'].append(address)
+            res['ip_v4'].append((address, port))
         elif is_valid_ipv6_address(address):
-            res['ip_v6'].append(address)
+            res['ip_v6'].append((address, port))
         else:
             logger.error('invalid address: %s' % address)
         self.dict.commit()
@@ -90,7 +85,6 @@ class UserShares:
         res = self.get_resource(jid, resource)
         res['ip_v4'] = []
         res['ip_v6'] = []
-        res["port"] = 0
 
     def clear_shares(self, jid, resource):
         """
@@ -148,10 +142,7 @@ class UserShares:
                     if not h.get(hash, False):
                         h[hash] = []
                     for address in self.dict[user][resource]['ip_v4'] + self.dict[user][resource]['ip_v6']:
-                        address_tuple = (address, self.dict[user][resource]['port'])
-
-                        if address_tuple not in h[hash]:
-                            h[hash].append(
-                                (address, self.dict[user][resource]['port']))
+                        if address not in h[hash]:
+                            h[hash].append(address)
 
         return h

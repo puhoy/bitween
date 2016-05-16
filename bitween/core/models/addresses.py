@@ -27,9 +27,11 @@ class Addresses:
         self.ports = ports
         """
         addresses = get_ip_addresses()
+
         self.ip_v4 = addresses['ip_v4']
         self.ip_v6 = addresses['ip_v6']
-        self.port = 0
+        self.ports = []
+        self.nat_ports = []
 
     def has_ip_v4(self):
         return self.ip_v4 is not []

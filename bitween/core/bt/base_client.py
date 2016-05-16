@@ -278,10 +278,14 @@ class TorrentClient(Thread, PubSubscriber):
                     self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
-                elif alert.what() == "external_ip_alert":  # todo
-                    ip = alert.external_address
-                    logger.info('got our ip: %s' % ip)
-                    self.publish('set_ip_address', ip)  # todo
+                #elif alert.what() == "external_ip_alert":  # todo
+                #    ip = alert.external_address
+                #    logger.info('got our ip: %s' % ip)
+                #    self.publish('set_ip_address', ip)  # todo
+                elif alert.what() == "portmap_alert":
+                    # http://www.rasterbar.com/products/libtorrent/manual.html#portmap-alert
+                    # This alert is generated when a NAT router was successfully found and a port was successfully mapped on it. On a NAT:ed network with a NAT-PMP capable router, this is typically generated once when mapping the TCP port and, if DHT is enabled, when the UDP port is mapped.
+                    self.publish('set_port', alert.external_port)
                 else:
                     logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
             time.sleep(1)
@@ -332,7 +336,7 @@ class TorrentClient(Thread, PubSubscriber):
         :param peer_port:
         :return:
         """
-
+        # todo: port thing is restructured
         logger.debug('trying to add peer')
         # info = handle.torrent_file()
         # info.name()

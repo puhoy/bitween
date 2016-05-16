@@ -115,8 +115,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         if addresses is not None:
             user_shares.clear_addresses(contact, resource)
             for d in addresses:
-                user_shares.add_address(jid=contact, resource=resource, address=d['address'])
-                user_shares.set_port(jid=contact, resource=resource, port=d['port'])
+                user_shares.add_address(jid=contact, resource=resource, address=d['address'], port=d['port'])
 
     def on_exit(self):
         logger.debug('sending empty shares')
