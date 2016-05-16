@@ -1,6 +1,7 @@
 import logging
 from threading import Lock
 from time import time
+from tools.storeddict import StoredDict
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def is_valid_ipv6_address(address):
 
 class UserShares:
     def __init__(self):
-        self.dict = {}
+        self.dict = StoredDict('user_cache.json')
         """
         self.dict = {
             'user@server': {
@@ -73,6 +74,7 @@ class UserShares:
     def set_port(self, jid, resource, port):
         res = self.get_resource(jid, resource)
         res['port'] = port
+        self.dict.commit()
 
     def add_address(self, jid, resource, address):
         res = self.get_resource(jid, resource)
@@ -82,6 +84,7 @@ class UserShares:
             res['ip_v6'].append(address)
         else:
             logger.error('invalid address: %s' % address)
+        self.dict.commit()
 
     def clear_addresses(self, jid, resource):
         res = self.get_resource(jid, resource)
@@ -108,6 +111,7 @@ class UserShares:
         res['shares'][hash]['size'] = size
         res['shares'][hash]['files'] = files
         res['shares'][hash]['hash'] = hash
+        self.dict.commit()
 
     def __iter__(self):
         with self.lock:

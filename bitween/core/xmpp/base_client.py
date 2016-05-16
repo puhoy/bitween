@@ -81,18 +81,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-    def on_send_handles(self):
-        """
-        for debugging purposes only
-
-        :return:
-        """
-        h = [{'name': 'test',
-              'hash': 'xxxxx',
-              'size': 100}]
-        ip_address = '1.1.1.1'
-        self['shares'].publish_shares(h, ip_address)
-
     def on_update_shares(self):
         logger.debug('publishing shares')
         self['shares'].publish_shares(own_shares, addresses_ports)

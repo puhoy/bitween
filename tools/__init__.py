@@ -1,4 +1,4 @@
-from pycallgraph import PyCallGraph
+'''from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 
 def profile(filename="output.png"):
@@ -18,3 +18,4 @@ def profile(filename="output.png"):
                 return func(*args, **kwargs)
         return inner
     return wrapper
+'''

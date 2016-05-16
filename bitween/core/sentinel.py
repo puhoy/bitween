@@ -77,7 +77,8 @@ class Sentinel(Thread, PubSubscriber):
         logging.info('quitting')
 
     def on_bt_ready(self):
-        self.addresses.port = self.bt_client['client'].session.listen_port()
+        #self.addresses.port = self.bt_client['client'].session.listen_port()
+        self.addresses.port = self.bt_client['client'].session.ssl_listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
         self.publish('update_shares')
