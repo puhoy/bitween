@@ -22,7 +22,7 @@ class UserSharesStanza(ElementBase):
         """
 
         :param ip:
-        :param type: 'v4' or 'v6'
+        :param v: 'v4' or 'v6'
         :param port: the port bt is listening on
         :return:
         """

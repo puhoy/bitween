@@ -2,9 +2,11 @@ import logging
 from threading import Lock
 from time import time
 
+
 logger = logging.getLogger(__name__)
 
 import socket
+
 
 # check methods from http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
 def is_valid_ipv4_address(address):
@@ -21,6 +23,7 @@ def is_valid_ipv4_address(address):
 
     return True
 
+
 def is_valid_ipv6_address(address):
     try:
         socket.inet_pton(socket.AF_INET6, address)
@@ -31,7 +34,7 @@ def is_valid_ipv6_address(address):
 
 class UserShares:
     def __init__(self):
-        self.dict = {}
+        self.dict = {} # StoredDict('user_cache.json', autocommit=True)
         """
         self.dict = {
             'user@server': {
@@ -81,7 +84,6 @@ class UserShares:
         else:
             logger.error('invalid address: %s' % address)
 
-
     def clear_addresses(self, jid, resource):
         res = self.get_resource(jid, resource)
         res['ip_v4'] = []
@@ -128,7 +130,7 @@ class UserShares:
     @property
     def hashes(self):
         """
-        returns a dict with all hashes and a list of ips for each hash
+        returns a dict with all hashes and a list of ip_port tuples for each hash
 
         :return:
         """
@@ -141,12 +143,12 @@ class UserShares:
                     logger.debug(share)
                     hash = self.dict[user][resource]['shares'][share]['hash']
                     if not h.get(hash, False):
-                        h[hash] = {'ip_v4': [],
-                                   'ip_v6': []}
-                    if self.dict[user][resource]['ip_v4']:
-                        if self.dict[user][resource]['ip_v4'] not in h[hash]['ip_v4']:
-                            h[hash]['ip_v4'].append(self.dict[user][resource]['ip_v4'])
-                    if self.dict[user][resource]['ip_v6']:
-                        if self.dict[user][resource]['ip_v6'] not in h[hash]['ip_v6']:
-                            h[hash]['ip_v6'].append(self.dict[user][resource]['ip_v6'])
+                        h[hash] = []
+                    for address in self.dict[user][resource]['ip_v4'] + self.dict[user][resource]['ip_v6']:
+                        address_tuple = (address, self.dict[user][resource]['port'])
+
+                        if address_tuple not in h[hash]:
+                            h[hash].append(
+                                (address, self.dict[user][resource]['port']))
+
         return h

@@ -25,17 +25,59 @@ POST /api
 """
 port = 0
 host = ''
+def post(method, params=None):
+    if params is None:
+        params = []
+    data = {"jsonrpc": "2.0",
+            "method": method,
+            "params": params,
+            "id": "%s" % random.randint(1000, 9999)}
+    ret = requests.post("http://%s:%s/api" % (host, port), data=json.dumps(data))
+    return ret
 
 def exit():
-    data = {"jsonrpc": "2.0",
-        "method": "Api.exit",
-        "params": [],
-        "id": "%s" % random.randint(1000, 9999)}
-    post(data)
+    method = "Api.exit"
+    print(post(method))
 
-def post(data):
-    ret = requests.post("http://%s:%s/api" % (host, port), data=json.dumps(data))
-    print(ret.content)
+
+def list():
+
+    import humanize
+    hashes = {}
+    method = "Api.get_all_torrents"
+    contacts = post(method).json()['result']
+    #print(contacts)
+
+    for contact in contacts:
+        for resource in contacts[contact]:
+            for hash, val_dict in contacts[contact][resource]['shares'].iteritems():
+                c = hashes.get(hash, {'contacts': []}).get('contacts')
+                c.append('%s/%s' % (contact, resource))
+                hashes[hash] = {'name': val_dict['name'],
+                                'size': val_dict['size'],
+                                'contacts': c}
+
+    #print(json.dumps(hashes, indent=2))
+    for h, v in hashes.iteritems():
+        print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
+
+def add_hash(hash, dest=None):
+    import os
+    if not dest:
+        dest = json.load(open('conf.json'))['save_path']
+    method = "bt.add_torrent_by_hash"
+    params = {
+      "hash": hash,
+      "save_path": os.path.abspath(dest)
+    }
+    print(post(method, params))
+
+def add_file(path):
+    method = "bt.add_file"
+    params = {
+      "file": path
+    }
+    print(post(method, params))
 
 
 if __name__ == "__main__":
@@ -43,6 +85,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
     parser.add_argument("--exit", default=False, action='store_true')
+    parser.add_argument("--list", default=False, action='store_true')
+    parser.add_argument("--add_hash")
+    parser.add_argument("--add_file")
     parser.add_argument("--debug", default=False, action='store_true')
 
     args = parser.parse_args()
@@ -52,3 +97,11 @@ if __name__ == "__main__":
 
     if args.exit:
         exit()
+    elif args.list:
+        list()
+    elif args.add_hash:
+        add_hash(args.add_hash)
+    elif args.add_file:
+        add_file(args.add_file)
+
+

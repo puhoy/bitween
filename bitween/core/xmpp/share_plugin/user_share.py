@@ -30,15 +30,16 @@ class UserShares(BasePlugin):
         register_stanza_plugin(UserSharesStanza, AddressStanza, iterable=True)
         self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
 
-    def publish_shares(self, handles, addresses=None, options=None,
+    def publish_shares(self, handles=None, addresses=None, options=None,
                        ifrom=None, block=True, callback=None, timeout=None):
 
         shares = UserSharesStanza()
         shares['resource'] = self.xmpp.boundjid.resource
 
-        for h in handles:
-            if h.get('hash', False):
-                shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
+        if handles:
+            for h in handles:
+                if h.get('hash', False):
+                    shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
 
         if addresses:
             for v4 in addresses.ip_v4:

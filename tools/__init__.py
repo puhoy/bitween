@@ -1,5 +1,5 @@
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
+#from pycallgraph import PyCallGraph
+#from pycallgraph.output import GraphvizOutput
 
 def profile(filename="output.png"):
     """

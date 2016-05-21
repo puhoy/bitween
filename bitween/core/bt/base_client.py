@@ -13,7 +13,7 @@ import libtorrent as lt
 from bitween.pubsub import PubSubscriber
 from ..models import user_shares
 from bitween.core.models import own_shares
-#from bitween.core.models import addresses_ports
+from bitween.core.models import addresses_ports
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,8 @@ class TorrentClient(Thread, PubSubscriber):
         self.setup_settings()
         self.setup_db()
 
+        #self.addresses_ports = addresses_ports
+
         # logger.info('listening on port %s' % self.session.listen_port())
         # logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
@@ -104,12 +106,12 @@ class TorrentClient(Thread, PubSubscriber):
 
         # self.session.start_dht()
         # self.session.start_lsd()
-        # self.session.start_upnp()
-        # self.session.start_natpmp()
+        self.session.start_upnp()
+        self.session.start_natpmp()
         self.session.stop_dht()
         self.session.stop_lsd()
-        self.session.stop_natpmp()
-        self.session.stop_upnp()
+        #self.session.stop_natpmp()
+        #self.session.stop_upnp()
 
     def setup_db(self):
         """
@@ -261,17 +263,20 @@ class TorrentClient(Thread, PubSubscriber):
                 # self.torrent_updated.emit(handle, handle.status())
 
             for alert in self.session.pop_alerts():
-
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 elif alert.what() == "torrent_update_alert":
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
+                    self.publish('new_handle')
+                elif alert.what() == "state_update_alert":
+                    self.set_shares()
+                    self.publish('new_handle')
                 elif alert.what() == "file_error_alert":
                     logger.info("%s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 elif alert.what() == "external_ip_alert":  # todo
@@ -303,13 +308,13 @@ class TorrentClient(Thread, PubSubscriber):
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                     logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    own_shares.rebuild(self.handles)
+                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 else:
@@ -349,20 +354,24 @@ class TorrentClient(Thread, PubSubscriber):
         else:
             return False
 
-    def on_add_hash(self, hash, save_path):
-        mlink = 'magnet:?xt=urn:btih:%s' % hash
+    def on_add_hash(self, sha_hash, save_path):
+        mlink = 'magnet:?xt=urn:btih:%s' % sha_hash
         params = {
             'save_path': save_path,
             'duplicate_is_error': True
         }
         link = mlink
+        logger.debug('adding new handly by magnetlink')
         handle = lt.add_magnet_uri(self.session, link, params)
         self.handles.append(handle)
-        own_shares.rebuild(self.handles)
+        logger.debug('adding peers to handle...')
+        own_addresses = addresses_ports.ip_v4 + addresses_ports.ip_v6
 
-        for ip in user_shares.hashes[hash]['ip_v4']:
-            handle.connect_peer((ip, 6881), 0)
-
+        for addr_tuple in user_shares.hashes[sha_hash]:
+            if addr_tuple[0] not in own_addresses:
+                logger.debug('adding peer to %s: %s:%s' % (sha_hash, addr_tuple[0], addr_tuple[1]))
+                handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
+        logger.debug('done!')
         self.publish('new_handle')
 
 
@@ -407,7 +416,7 @@ class TorrentClient(Thread, PubSubscriber):
         # logger.debug('added handle-hash %s' % info.info_hash())
 
         self.handles.append(handle)
-        own_shares.rebuild(self.handles)
+        self.set_shares()
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -442,7 +451,7 @@ class TorrentClient(Thread, PubSubscriber):
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.append(handle)
-        own_shares.rebuild(self.handles)
+        self.set_shares()
         self.publish('new_handle')
         # self.torrent_added.emit(handle)
 
@@ -563,3 +572,35 @@ class TorrentClient(Thread, PubSubscriber):
         c.execute("DELETE FROM torrents")
         db.commit()
         db.close()
+
+    def set_shares(self):
+        infos = []
+        for handle in self.handles:
+            try:
+                info = handle.get_torrent_info()
+                h = {}
+
+                # h['handle'] = '%s' % handle
+                h['files'] = []
+                h['total_size'] = info.total_size()
+
+                h['name'] = info.name()
+                h['hash'] = '%s' % handle.info_hash()
+
+                try:
+                    files = info.files()  # the filestore object
+                except:
+                    files = []
+
+                for f in files:
+                    h['files'].append(
+                        {
+                            'path': f.path,  # filename for file at index f
+                            # 'size': files.file_size(f)
+                        })
+                infos.append(h)
+            except Exception as e:
+                logger.error('error while building torrent list: %s' % e)
+
+
+        own_shares.rebuild(infos)

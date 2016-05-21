@@ -17,5 +17,5 @@ def resend_handles():
     debugging: send empty handles and dummy ip
     :return:
     """
-    publish('update_magnetlinks')
+    publish('update_shares')
 

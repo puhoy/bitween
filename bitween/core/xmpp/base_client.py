@@ -27,7 +27,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         PubSubscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
-
         self.add_event_handler("session_start", self.start)
         self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
         self.add_event_handler('shares_publish', self.on_shares_publish)
@@ -40,7 +39,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.register_plugin('xep_0128')
         self.register_plugin('xep_0163')
         self.register_plugin('shares', module=share_plugin)
-
+        self['xep_0115'].update_caps()
         # self.auto_authorize = True
         # self.auto_subscribe = True
 
@@ -64,9 +63,9 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.send_presence()
         self.get_roster()
-        self['xep_0115'].update_caps()
 
-        #self['shares'].publish_shares(handlelist, handlelist.ip_address)
+
+        # self['shares'].publish_shares(handlelist, handlelist.ip_address)
 
     def process_queue(self):
         '''
@@ -101,8 +100,9 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     @staticmethod
     def on_shares_publish(msg):
         """ handle incoming files """
-        shares = msg['pubsub_event']['items']['item']['shares']
-        addresses = msg['pubsub_event']['items']['item']['addresses']
+        shares = msg['pubsub_event']['items']['item']['shares']['share_items']
+        addresses = msg['pubsub_event']['items']['item']['shares']['addresses']
+        resource = msg['pubsub_event']['items']['item']['shares']['resource']
 
         logger.debug('addresses: %s' % msg['pubsub_event']['items']['item']['shares']['addresses'])
         logger.debug('shares: %s' % msg['pubsub_event']['items']['item']['shares']['share_items'])
@@ -111,14 +111,10 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         logger.debug('got magnetlinks from %s' % msg['from'])
         contact = str(msg['from'])
-        resource = shares.attrib.get('resource', '')
 
         if shares is not None:
-
             user_shares.clear_shares(contact, resource)
-            user_shares.clear_addresses(contact, resource)
-
-            res = user_shares.get_resource(contact, resource)
+            # res = user_shares.get_resource(contact, resource)
             for d in shares:
                 hash = d.attrib['hash']
                 size = d.attrib['size']
@@ -127,6 +123,12 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                 user_shares.add_share(jid=contact, resource=resource, hash=hash, name=name, size=size, files=[])
         else:
             logger.debug('No item content')
+
+        if addresses is not None:
+            user_shares.clear_addresses(contact, resource)
+            for d in addresses:
+                user_shares.add_address(jid=contact, resource=resource, address=d['address'])
+                user_shares.set_port(jid=contact, resource=resource, port=d['port'])
 
     def on_exit(self):
         logger.debug('sending empty shares')
