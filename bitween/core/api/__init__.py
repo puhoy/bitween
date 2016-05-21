@@ -42,6 +42,11 @@ def safe_exit():
 
 @jsonrpc.method('Api.get_all_torrents')
 def get_all_torrents():
+    """
+    return a list of all discovered bitween clients and their torrents
+
+    :return:
+    """
     return user_shares.dict
 
 class JsonRpcAPI(Thread):

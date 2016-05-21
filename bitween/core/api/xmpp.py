@@ -15,4 +15,9 @@ def add_account(jid, password):
 
 @jsonrpc.method('xmpp.get_hashes')
 def get_all_hashes():
+    """
+    return a list of all hashes with associated address tuples
+
+    :return:
+    """
     return jsonify({'hashes': user_shares.hashes})
