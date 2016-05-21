@@ -87,6 +87,8 @@ if __name__ == "__main__":
     parser.add_argument("--exit", default=False, action='store_true')
     parser.add_argument("--list", default=False, action='store_true')
     parser.add_argument("--add_hash")
+
+    parser.add_argument("--dest")
     parser.add_argument("--add_file")
     parser.add_argument("--debug", default=False, action='store_true')
 
@@ -100,7 +102,10 @@ if __name__ == "__main__":
     elif args.list:
         list()
     elif args.add_hash:
-        add_hash(args.add_hash)
+        if not args.dest:
+            add_hash(args.add_hash)
+        else:
+            add_hash(args.add_hash, args.dest)
     elif args.add_file:
         add_file(args.add_file)
 

@@ -27,18 +27,15 @@ class TorrentClient(Thread, PubSubscriber):
         Thread.__init__(self)
         PubSubscriber.__init__(self, autosubscribe=True)
         self.statdb = 'stat.db'
-        self.settingname = 'defaultsetting'
+
         self.session = lt.session()
-        self.state_str = ['queued', 'checking', 'downloading metadata', \
-                          'downloading', 'finished', 'seeding', 'allocating', 'checking fastresume']
+
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
         logger.info('libtorrent %s' % lt.version)
 
         self.handles = []
 
         self.session.listen_on(6881, 6891)
-
-        # self.session.set_alert_mask(lt.alert.category_t.storage_notification)
 
         """-----alert categories-----
         error_notification
@@ -59,15 +56,10 @@ class TorrentClient(Thread, PubSubscriber):
 
         self.end = False
 
-        self.status = "stopped"
-
         self.setup_settings()
         self.setup_db()
 
-        #self.addresses_ports = addresses_ports
 
-        # logger.info('listening on port %s' % self.session.listen_port())
-        # logging.info('listening on ssl_port %s' % self.session.ssl_listen_port())
 
         self.name = 'bt'
         self.publish('bt_ready')
@@ -79,32 +71,35 @@ class TorrentClient(Thread, PubSubscriber):
         :return:
         """
         # settings
-        pesettings = lt.pe_settings()
-        pesettings.in_enc_policy = lt.enc_policy.forced
-        pesettings.out_enc_policy = lt.enc_policy.forced
-        pesettings.allowed_enc_level = lt.enc_level.rc4
-        self.session.set_pe_settings(pesettings)
+        #pesettings = lt.pe_settings()
+        #pesettings.in_enc_policy = lt.enc_policy.forced
+        #pesettings.out_enc_policy = lt.enc_policy.forced
+        #pesettings.allowed_enc_level = lt.enc_level.rc4
+        #self.session.set_pe_settings(pesettings)
 
         session_settings = lt.session_settings()
 
-        session_settings.announce_to_all_tiers = True
-        session_settings.announce_to_all_trackers = True
-        session_settings.connection_speed = 100
-        session_settings.peer_connect_timeout = 2
-        session_settings.rate_limit_ip_overhead = True
-        session_settings.request_timeout = 5
-        session_settings.torrent_connect_boost = 100
+        session_settings.announce_to_all_tiers = False  # announce_to_all_tiers also controls how multi tracker torrents are treated. When this is set to true, one tracker from each tier is announced to. This is the uTorrent behavior. This is false by default in order to comply with the multi-tracker specification.
+        session_settings.announce_to_all_trackers = False  # announce_to_all_trackers controls how multi tracker torrents are treated. If this is set to true, all trackers in the same tier are announced to in parallel. If all trackers in tier 0 fails, all trackers in tier 1 are announced as well. If it's set to false, the behavior is as defined by the multi tracker specification. It defaults to false, which is the same behavior previous versions of libtorrent has had as well.
+        #session_settings.connection_speed = 100  # connection_speed is the number of connection attempts that are made per second. If a number < 0 is specified, it will default to 200 connections per second. If 0 is specified, it means don't make outgoing connections at all.
+        session_settings.ignore_limits_on_local_network = True  # ignore_limits_on_local_network, if set to true, upload, download and unchoke limits are ignored for peers on the local network.
+        # session_settings.peer_connect_timeout = 2  # peer_connect_timeout the number of seconds to wait after a connection attempt is initiated to a peer until it is considered as having timed out. The default is 10 seconds. This setting is especially important in case the number of half-open connections are limited, since stale half-open connection may delay the connection of other peers considerably.
+        session_settings.rate_limit_ip_overhead = True  # If rate_limit_ip_overhead is set to true, the estimated TCP/IP overhead is drained from the rate limiters, to avoid exceeding the limits with the total traffic
+        session_settings.allow_multiple_connections_per_ip = True  # allow_multiple_connections_per_ip determines if connections from the same IP address as existing connections should be rejected or not. Multiple connections from the same IP address is not allowed by default, to prevent abusive behavior by peers. It may be useful to allow such connections in cases where simulations are run on the same machie, and all peers in a swarm has the same IP address
+        #session_settings.request_timeout = 5
+        # session_settings.torrent_connect_boost = 100  # torrent_connect_boost is the number of peers to try to connect to immediately when the first tracker response is received for a torrent. This is a boost to given to new torrents to accelerate them starting up. The normal connect scheduler is run once every second, this allows peers to be connected immediately instead of waiting for the session tick to trigger connections.
         self.session.set_settings(session_settings)
 
         # extensions
-        # self.session.add_extension(
-        #    lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
-        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
-        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
         self.session.add_extension(
-            lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
+            lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
+        self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
+        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
+        #self.session.add_extension(
+        #    lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
 
         # self.session.start_dht()
+
         # self.session.start_lsd()
         self.session.start_upnp()
         self.session.start_natpmp()
@@ -112,6 +107,7 @@ class TorrentClient(Thread, PubSubscriber):
         self.session.stop_lsd()
         #self.session.stop_natpmp()
         #self.session.stop_upnp()
+
 
     def setup_db(self):
         """
@@ -126,7 +122,6 @@ class TorrentClient(Thread, PubSubscriber):
             c = conn.cursor()
             c.execute(
                 "CREATE TABLE torrents (magnetlink VARCHAR PRIMARY KEY, torrent BLOB, status BLOB, save_path VARCHAR)")
-            c.execute("CREATE TABLE sessionstatus (settingname VARCHAR PRIMARY KEY, status BLOB)")
             conn.commit()
             conn.close()
 
@@ -183,6 +178,7 @@ class TorrentClient(Thread, PubSubscriber):
                 logger.info('new file priorities: %s ' % handle.file_priorities())
             '''
 
+    '''
     def pause(self, what):
         """ pauses or unpauses the session
         """
@@ -219,6 +215,7 @@ class TorrentClient(Thread, PubSubscriber):
     #                 return False
     #     self.session.set_ip_filter(filter)
     #     self.statusbar.emit("%s" % self.status)
+'''
 
     def run(self):
         """
@@ -235,7 +232,6 @@ class TorrentClient(Thread, PubSubscriber):
         # self.setup_blocklist()
         self.resume()
 
-        self.status = "running"
         """
         print("settings:")
         for attr, value in self.session.get_settings().items():
@@ -273,16 +269,20 @@ class TorrentClient(Thread, PubSubscriber):
                     self.set_shares()
                     self.publish('new_handle')
                 elif alert.what() == "file_error_alert":
-                    logger.info("%s" % alert.error)
+                    logger.error("FILE ERROR: %s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
                     self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
-                elif alert.what() == "external_ip_alert":  # todo
-                    ip = alert.external_address
-                    logger.info('got our ip: %s' % ip)
-                    self.publish('set_ip_address', ip)  # todo
+                #elif alert.what() == "external_ip_alert":  # todo
+                #    ip = alert.external_address
+                #    logger.info('got our ip: %s' % ip)
+                #    self.publish('set_ip_address', ip)  # todo
+                elif alert.what() == "portmap_alert":
+                    # http://www.rasterbar.com/products/libtorrent/manual.html#portmap-alert
+                    # This alert is generated when a NAT router was successfully found and a port was successfully mapped on it. On a NAT:ed network with a NAT-PMP capable router, this is typically generated once when mapping the TCP port and, if DHT is enabled, when the UDP port is mapped.
+                    self.publish('set_port', alert.external_port)
                 else:
                     logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
             time.sleep(1)
@@ -320,7 +320,6 @@ class TorrentClient(Thread, PubSubscriber):
                 else:
                     logger.info('got %s: %s' % (alert.what(), alert.message()))
 
-        self.save_state()
         time.sleep(1)
         logger.debug("handles at return: %s" % self.handles)
         return
@@ -334,7 +333,7 @@ class TorrentClient(Thread, PubSubscriber):
         :param peer_port:
         :return:
         """
-
+        # todo: port thing is restructured
         logger.debug('trying to add peer')
         # info = handle.torrent_file()
         # info.name()
@@ -373,7 +372,6 @@ class TorrentClient(Thread, PubSubscriber):
                 handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
         logger.debug('done!')
         self.publish('new_handle')
-
 
     def on_add_magnetlink(self, magnetlink, save_path):
         """
@@ -513,23 +511,6 @@ class TorrentClient(Thread, PubSubscriber):
         db.commit()
         db.close()
 
-    def save_state(self):
-        """
-        saves the session settings to db
-
-        :return:
-        """
-        # create table sessionstatus (status blob)
-        logger.debug('saving state')
-        entry = self.session.save_state()
-        encentry = lt.bencode(entry)
-        db = sqlite3.connect(self.statdb)
-        # create table torrents (magnetlink varchar(256), torrent blob, status blob);
-        c = db.cursor()
-        c.execute("INSERT OR REPLACE INTO sessionstatus VALUES (?, ?)", (self.settingname, sqlite3.Binary(encentry)))
-        db.commit()
-        db.close()
-
     def resume(self):
         """
         reads the sessionsettings from db file and sets them,
@@ -540,13 +521,6 @@ class TorrentClient(Thread, PubSubscriber):
         # load state
         db = sqlite3.connect(self.statdb)
         c = db.cursor()
-        # erg = c.execute("SELECT * FROM sessionstatus")
-        # f = erg.fetchone()
-        # if f:
-        #    encsettings = f[1]
-        #    settings = lt.bdecode(bytes(encsettings))
-        #    self.session.load_state(settings)
-        #    logger.info("loaded settings: %s" % settings)
 
         # load last torrents
         erg = c.execute("SELECT * FROM torrents")
@@ -601,6 +575,4 @@ class TorrentClient(Thread, PubSubscriber):
                 infos.append(h)
             except Exception as e:
                 logger.error('error while building torrent list: %s' % e)
-
-
         own_shares.rebuild(infos)

@@ -1,6 +1,7 @@
 import logging
 from threading import Lock
 from time import time
+from tools.storeddict import StoredDict
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ def is_valid_ipv6_address(address):
 class UserShares:
     def __init__(self):
         self.dict = {} # StoredDict('user_cache.json', autocommit=True)
+
         """
         self.dict = {
             'user@server': {
@@ -71,24 +73,20 @@ class UserShares:
                               }
         return user.get(resource)
 
-    def set_port(self, jid, resource, port):
-        res = self.get_resource(jid, resource)
-        res['port'] = port
-
-    def add_address(self, jid, resource, address):
+    def add_address(self, jid, resource, address, port):
         res = self.get_resource(jid, resource)
         if is_valid_ipv4_address(address):
-            res['ip_v4'].append(address)
+            res['ip_v4'].append((address, port))
         elif is_valid_ipv6_address(address):
-            res['ip_v6'].append(address)
+            res['ip_v6'].append((address, port))
         else:
             logger.error('invalid address: %s' % address)
+
 
     def clear_addresses(self, jid, resource):
         res = self.get_resource(jid, resource)
         res['ip_v4'] = []
         res['ip_v6'] = []
-        res["port"] = 0
 
     def clear_shares(self, jid, resource):
         """
@@ -146,7 +144,6 @@ class UserShares:
                         h[hash] = []
                     for address in self.dict[user][resource]['ip_v4'] + self.dict[user][resource]['ip_v6']:
                         address_tuple = (address, self.dict[user][resource]['port'])
-
                         if address_tuple not in h[hash]:
                             h[hash].append(
                                 (address, self.dict[user][resource]['port']))

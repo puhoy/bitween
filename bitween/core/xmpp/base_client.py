@@ -65,8 +65,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.get_roster()
 
 
-        # self['shares'].publish_shares(handlelist, handlelist.ip_address)
-
     def process_queue(self):
         '''
         do something with the queue here
@@ -80,18 +78,6 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
                 f(*args, **kwargs)
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
-
-    def on_send_handles(self):
-        """
-        for debugging purposes only
-
-        :return:
-        """
-        h = [{'name': 'test',
-              'hash': 'xxxxx',
-              'size': 100}]
-        ip_address = '1.1.1.1'
-        self['shares'].publish_shares(h, ip_address)
 
     def on_update_shares(self):
         logger.debug('publishing shares')
@@ -127,8 +113,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         if addresses is not None:
             user_shares.clear_addresses(contact, resource)
             for d in addresses:
-                user_shares.add_address(jid=contact, resource=resource, address=d['address'])
-                user_shares.set_port(jid=contact, resource=resource, port=d['port'])
+                user_shares.add_address(jid=contact, resource=resource, address=d['address'], port=d['port'])
 
     def on_exit(self):
         logger.debug('sending empty shares')
