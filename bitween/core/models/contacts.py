@@ -142,10 +142,10 @@ class UserShares:
                     hash = self.dict[user][resource]['shares'][share]['hash']
                     if not h.get(hash, False):
                         h[hash] = []
-                    for address in self.dict[user][resource]['ip_v4'] + self.dict[user][resource]['ip_v6']:
-                        address_tuple = (address, self.dict[user][resource]['port'])
-                        if address_tuple not in h[hash]:
-                            h[hash].append(
-                                (address, self.dict[user][resource]['port']))
+                    for (address, port) in self.dict[user][resource]['ip_v4'] + self.dict[user][resource]['ip_v6']:
+                            address_tuple = (address, port)
+                            if address_tuple not in h[hash]:
+                                h[hash].append(
+                                    (address, port))
 
         return h

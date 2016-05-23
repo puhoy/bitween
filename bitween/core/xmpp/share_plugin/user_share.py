@@ -40,6 +40,8 @@ class UserShares(BasePlugin):
             for h in handles:
                 if h.get('hash', False):
                     shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
+                else:
+                    logger.error('NO HASH FOR HANDLE!')
 
         if addresses:
             for addr in addresses.ip_v4 + addresses.ip_v6:
