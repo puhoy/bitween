@@ -3,6 +3,7 @@ import ipgetter
 
 import logging
 
+from .. import conf
 logger = logging.getLogger(__name__)
 
 
@@ -28,8 +29,10 @@ class Addresses:
         """
         addresses = get_ip_addresses()
 
-        self.ip_v4 = addresses['ip_v4']
-        self.ip_v6 = addresses['ip_v6']
+        if conf.get("enable_ipv4", False):
+            self.ip_v4 = addresses['ip_v4']
+        if conf.get("enable_ipv6", False):
+            self.ip_v6 = addresses['ip_v6']
         self.ports = []
         self.nat_ports = []
 

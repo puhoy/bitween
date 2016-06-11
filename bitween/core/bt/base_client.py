@@ -245,12 +245,12 @@ class TorrentClient(Thread, PubSubscriber):
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
-                elif alert.what() == "torrent_update_alert":
-                    self.set_shares()
-                    self.publish('new_handle')
-                elif alert.what() == "state_update_alert":
-                    self.set_shares()
-                    self.publish('new_handle')
+                #elif alert.what() == "torrent_update_alert":
+                #    self.set_shares()
+                #    self.publish('new_handle')
+                #elif alert.what() == "state_update_alert":
+                #    self.set_shares()
+                #    self.publish('new_handle')
                 elif alert.what() == "file_error_alert":
                     logger.error("FILE ERROR: %s" % alert.error)
                     self.session.remove_torrent(handle)
@@ -268,6 +268,10 @@ class TorrentClient(Thread, PubSubscriber):
                     # http://www.rasterbar.com/products/libtorrent/manual.html#portmap-alert
                     # This alert is generated when a NAT router was successfully found and a port was successfully mapped on it. On a NAT:ed network with a NAT-PMP capable router, this is typically generated once when mapping the TCP port and, if DHT is enabled, when the UDP port is mapped.
                     self.publish('set_port', alert.external_port)
+                elif alert.what() == "metadata_received_alert":
+                    # send shares when we have enough data to tell someone about it
+                    self.set_shares()
+                    self.publish('new_handle')
                 elif alert.what() == "portmap_error_alert":
                     logger.error('portmap error: %s' % alert.error)
                 else:

@@ -6,8 +6,6 @@ from argparse import ArgumentParser
 from bitween.core.sentinel import Sentinel
 
 
-setup_logging()
-logger = logging.getLogger(__name__)
 
 
 #@arg('jid', help='jabber id')
@@ -28,10 +26,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
     if args.debug:
-        setup_logging(default_level=logging.INFO)
-    else:
         setup_logging(default_level=logging.DEBUG)
+    else:
+        setup_logging(default_level=logging.INFO)
+
+    logger = logging.getLogger(__name__)
 
     start(args.bind, args.port)

@@ -5,7 +5,9 @@
       "password": ""
     }
   ],
-  "save_path": "share"
+  "save_path": "share",
+  "enable_ipv4": true,
+  "enable_ipv6": true,
   "enable_upnp": true,
   "enable_natpmp": true
 }

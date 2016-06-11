@@ -21,5 +21,3 @@ def setup_logging(
         logging.config.dictConfig(config)
 
     logging.basicConfig(level=default_level)
-
-setup_logging()

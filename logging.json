@@ -15,6 +15,16 @@
             "stream": "ext://sys.stdout"
         },
 
+        "debug_file_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "filename": "debug.log",
+            "maxBytes": 10485760,
+            "backupCount": 20,
+            "encoding": "utf8"
+        },
+
         "info_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "INFO",
@@ -33,29 +43,10 @@
             "maxBytes": 10485760,
             "backupCount": 20,
             "encoding": "utf8"
-        },
-        "bt_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "bt.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        }
-
-    },
-
-    "loggers": {
-        "core.bt.base_client": {
-            "level": "DEBUG",
-            "handlers": ["bt_file_handler"],
-            "propagate": "no"
         }
     },
-
     "root": {
         "level": "DEBUG",
-        "handlers": ["console", "info_file_handler", "error_file_handler"]
+        "handlers": ["console", "info_file_handler", "error_file_handler", "debug_file_handler"]
     }
 }
