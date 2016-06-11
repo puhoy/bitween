@@ -86,7 +86,7 @@ class Sentinel(Thread, PubSubscriber):
 
     def on_set_port(self, port):
         logger.debug('setting external port to %s' % port)
-        self.addresses.nat_ports.append(port)
+        self.addresses.nat_ports = [port]
         logger.debug('new nat port list: %s' % self.addresses.nat_ports)
         self.publish('update_shares')
 

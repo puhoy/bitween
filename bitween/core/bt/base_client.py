@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 import chardet
 
+from .. import conf
+
 
 
 
@@ -121,16 +123,20 @@ class TorrentClient(Thread, PubSubscriber):
 
         # self.session.start_dht()
         # self.session.start_lsd()
-        self.session.start_upnp()
-        self.session.start_natpmp()
+        if conf.get("enable_upnp", False):
+            self.session.start_upnp()
+        else:
+            self.session.stop_upnp()
+        if conf.get("enable_natpmp", False):
+            self.session.start_natpmp()
+        else:
+            self.session.stop_natpmp()
+
         # self.session.stop_dht()
         # self.session.stop_lsd()
-        # self.session.stop_natpmp()
-        # self.session.stop_upnp()
 
         self.setup_db()
         self.name = 'bt'
-
         self.publish('bt_ready')
 
     def setup_settings(self):

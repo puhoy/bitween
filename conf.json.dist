@@ -6,4 +6,6 @@
     }
   ],
   "save_path": "share"
+  "enable_upnp": true,
+  "enable_natpmp": true
 }
