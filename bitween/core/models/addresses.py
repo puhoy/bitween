@@ -30,9 +30,15 @@ class Addresses:
         addresses = get_ip_addresses()
 
         if conf.get("enable_ipv4", False):
-            self.ip_v4 = addresses['ip_v4']
+            self.ip_v4 = addresses.get('ip_v4', [])
+        else:
+            self.ip_v4 = []
+
         if conf.get("enable_ipv6", False):
-            self.ip_v6 = addresses['ip_v6']
+            self.ip_v6 = addresses.get('ip_v6', [])
+        else:
+            self.ip_v6 = []
+
         self.ports = []
         self.nat_ports = []
 

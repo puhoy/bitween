@@ -240,7 +240,7 @@ class TorrentClient(Thread, PubSubscriber):
         while not self.end:
             # neue events abarbeiten
             self.handle_queue()
-
+            #   http://www.libtorrent.org/reference-Alerts.html
             for alert in self.session.pop_alerts():
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
