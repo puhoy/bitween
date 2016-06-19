@@ -4,6 +4,7 @@ import requests
 import random
 import json
 from argparse import ArgumentParser
+import humanize
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -41,8 +42,6 @@ def exit():
 
 
 def list():
-
-    import humanize
     hashes = {}
     method = "Api.get_all_torrents"
     contacts = post(method).json()['result']

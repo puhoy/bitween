@@ -1,5 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/bitween/badge/?version=latest)](http://bitween.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/puhoy/bitween.svg?branch=master)](https://travis-ci.org/puhoy/bitween)
+[![Build Status](https://travis-ci.org/puhoy/bitween.svg?branch=develop)](https://travis-ci.org/puhoy/bitween)
 [![Coverage Status](https://coveralls.io/repos/github/puhoy/bitween/badge.svg?branch=develop)](https://coveralls.io/github/puhoy/bitween?branch=develop)
 
 # bitween
@@ -51,17 +51,17 @@ optional:
 
 ## adding files to share
 
-    python term.py --add_file /path/to/file
+    python bitweenc.py --add_file /path/to/file
 
 
 ## get file hashes to download
 
-    python term.py --list
+    python bitweenc.py --list
 
 this will list all the files you have got via xmpp, so if you have not added an account before start, nothing will be listed here.
 
 
 ## download files by hash
 
-    python term.py --add_hash some_sha1_hash
+    python bitweenc.py --add_hash some_sha1_hash
 

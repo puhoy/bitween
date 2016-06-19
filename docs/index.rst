@@ -11,16 +11,24 @@ things you will need
 on ubuntu
 ~~~~~~~~~
 
-this should work from python 2.7 to 3.5 (so feel free to use pip3 / python3-libtorrent)
+tested on python2,7, could work on python3
 
-::
+clone to where ever you like::
+
+    git clone git@github.com:puhoy/bitween.git
+
+install dependencies (virtualenv)::
+
+    sudo apt-get install python-libtorrent
+    virtualenv --system-site-packages env
+    source env/bin/activate
+    pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+
+or install dependencies to system::
 
     sudo apt-get install python-libtorrent
     sudo pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
 
-then clone to where ever you like::
-
-    git clone git@github.com:puhoy/bitween.git
 
 configuring
 -----------
@@ -64,19 +72,19 @@ optional::
 
 adding files to share::
 
-    python term.py --add_file /path/to/file
+    python bitweenc.py --add_file /path/to/file
 
 
 get file hashes to download::
 
-    python term.py --list
+    python bitweenc.py --list
 
 this will list all the files you have got via xmpp, so if you have not added an account before start, nothing will be listed here.
 
 
 download files by hash::
 
-    python term.py --add_hash some_sha1_hash
+    python bitweenc.py --add_hash some_sha1_hash
 
 
 
