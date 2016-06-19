@@ -1,5 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/bitween/badge/?version=latest)](http://bitween.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/puhoy/bitween.svg?branch=master)](https://travis-ci.org/puhoy/bitween)
+[![Coverage Status](https://coveralls.io/repos/github/puhoy/bitween/badge.svg?branch=develop)](https://coveralls.io/github/puhoy/bitween?branch=develop)
 
 # bitween
 
