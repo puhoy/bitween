@@ -1,3 +1,6 @@
+[![Documentation Status](https://readthedocs.org/projects/bitween/badge/?version=latest)](http://bitween.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/puhoy/bitween.svg?branch=master)](https://travis-ci.org/puhoy/bitween)
+
 # bitween
 
 a somewhat experimental xmpp/bittorrent client
@@ -17,15 +20,19 @@ this should work from python 2.7 to 3.5 (so feel free to use pip3 / python3-libt
 copy the conf.json.dist to conf.json and fill in your xmpp credentials.
 use as many accounts as you like. the save_path is the default save path to download to.
 
+    {
+      "xmpp_accounts": [
         {
-          "xmpp_accounts": [
-            {
-              "jid": "user@domain/resource",
-              "password": "SuperSafePassword"
-            }
-          ],
-          "save_path": "share"
+          "jid": "user@domain",
+          "password": ""
         }
+      ],
+      "save_path": "share",
+      "enable_ipv4": true,
+      "enable_ipv6": true,
+      "enable_upnp": true,
+      "enable_natpmp": true
+    }
 
 
 

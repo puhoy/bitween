@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from app import some_app_file
+import importlib
+import imp
 
 class BasicTestSuite(unittest.TestCase):
     """Basic test cases."""
 
-    def test_some_app_file(self):
-        """ test app_function """
-        ret_string = some_app_file.app_function()
-        assert ret_string is 'regular'
+    def test_lt_is_available(self):
+        """ test libtorrent is available
+        see http://stackoverflow.com/questions/14050281/how-to-check-if-a-python-module-exists-without-importing-it
+        """
+        try:
+            imp.find_module('libtorrent')
+            found = True
+        except ImportError:
+            found = False
+        assert found
 
 
 if __name__ == '__main__':
