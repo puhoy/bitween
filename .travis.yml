@@ -6,7 +6,7 @@ branches:
 
 python:
   - "2.7"
-  
+
 virtualenv:
   system_site_packages: true
 
@@ -14,10 +14,10 @@ before_install:
   - sudo apt-get install python-libtorrent
 
 install:
-  - pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+  - pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize coveralls
 
 script:
-  - python setup.py test
+  - coverage run setup.py test
 
 after_success:
   coveralls
