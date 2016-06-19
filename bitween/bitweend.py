@@ -1,10 +1,16 @@
 from bitween.log import setup_logging
 import logging
+import sys
 
 from argparse import ArgumentParser
 
 from bitween.core.sentinel import Sentinel
 
+if sys.version_info < (3, 0):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+else:
+    raw_input = input
 
 
 
