@@ -1,7 +1,6 @@
 import logging
 from threading import Lock
 from time import time
-from tools.storeddict import StoredDict
 
 
 logger = logging.getLogger(__name__)
@@ -35,9 +34,9 @@ def is_valid_ipv6_address(address):
 
 class UserShares:
     def __init__(self):
-        self.dict = {} # StoredDict('user_cache.json', autocommit=True)
-
         """
+        this class holds all the discovered UserShares
+
         self.dict = {
             'user@server': {
                 'resource': {
@@ -56,15 +55,27 @@ class UserShares:
             }
         }
         """
+        self.dict = {} # StoredDict('user_cache.json', autocommit=True)
         self.lock = Lock()
 
     def get_user(self, jid):
+        """
+
+        :param jid:
+        :return:
+        """
         if not self.dict.get(jid, {}):
             self.dict[jid] = {}
         user = self.dict.get(jid, {})
         return user
 
     def get_resource(self, jid, resource):
+        """
+
+        :param jid:
+        :param resource:
+        :return:
+        """
         user = self.get_user(jid)
         if not user.get(resource, {}):
             user[resource] = {'ip_v4': '',
@@ -74,6 +85,14 @@ class UserShares:
         return user.get(resource)
 
     def add_address(self, jid, resource, address, port):
+        """
+
+        :param jid:
+        :param resource:
+        :param address:
+        :param port:
+        :return:
+        """
         res = self.get_resource(jid, resource)
         if is_valid_ipv4_address(address):
             res['ip_v4'].append((address, port))
@@ -84,6 +103,12 @@ class UserShares:
 
 
     def clear_addresses(self, jid, resource):
+        """
+
+        :param jid:
+        :param resource:
+        :return:
+        """
         res = self.get_resource(jid, resource)
         res['ip_v4'] = []
         res['ip_v6'] = []
@@ -93,7 +118,6 @@ class UserShares:
 
         :param jid:
         :param resource:
-        :param shares: a dict list with dicts like {'hash': xxx, 'name': '', size: 0, files: ['one', 'two']}
         :return:
         """
 

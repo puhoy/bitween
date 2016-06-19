@@ -1,6 +1,5 @@
 from . import jsonrpc
 from bitween.pubsub import publish
-from flask import jsonify
 
 
 @jsonrpc.method('debug.send_empty_handles')

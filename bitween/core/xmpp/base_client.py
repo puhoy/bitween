@@ -39,7 +39,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.register_plugin('xep_0128')
         self.register_plugin('xep_0163')
         self.register_plugin('shares', module=share_plugin)
-        self['xep_0115'].update_caps()
+
         # self.auto_authorize = True
         # self.auto_subscribe = True
 

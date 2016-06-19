@@ -66,7 +66,6 @@ def publish(topic, *args, **kwargs):
     """
     publish to a topic.
     """
-
     t = _get_topic(topic)
     logger.debug('got subscribers in topic: %s' % t['subscribers'])
     if not t['subscribers']:

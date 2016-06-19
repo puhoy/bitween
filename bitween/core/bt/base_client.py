@@ -5,6 +5,7 @@ import logging
 import os
 import sqlite3
 import time
+import sys
 from threading import Thread
 from types import FunctionType
 
@@ -21,12 +22,17 @@ import chardet
 
 from .. import conf
 
-
+if sys.version_info < (3, 0):
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+else:
+    raw_input = input
 
 
 def decode_string(s, encoding="utf8"):
-    # from deluges core/torrentmanager.py
     """
+    from deluges core/torrentmanager.py
+
     Decodes a string and return unicode. If it cannot decode using
     `:param:encoding` then it will try latin1, and if that fails,
     try to detect the string encoding. If that fails, decode with
@@ -62,8 +68,9 @@ def decode_string(s, encoding="utf8"):
 
 
 def utf8_encoded(s, encoding="utf8"):
-    # from deluges core/torrentmanager.py
     """
+    from deluges core/torrentmanager.py
+
     Returns a utf8 encoded string of s
 
     :param s: (unicode) string to (re-)encode
