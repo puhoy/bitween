@@ -118,3 +118,4 @@ target/
 config.json
 conf.json
 shared/*
+sync.sh

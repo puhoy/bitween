@@ -6,6 +6,7 @@
     }
   ],
   "save_path": "share",
+  "enable_web_api": true,
   "enable_ipv4": true,
   "enable_ipv6": true,
   "enable_upnp": true,

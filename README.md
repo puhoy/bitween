@@ -10,7 +10,20 @@ a somewhat experimental xmpp/bittorrent client
 ## things you will need
 ### on ubuntu
 
-this should work from python 2.7 to 3.5 (so feel free to use pip3 / python3-libtorrent)
+tested on python2,7, could work on python3
+
+clone to where ever you like::
+
+    git clone git@github.com:puhoy/bitween.git
+
+install dependencies (virtualenv)::
+
+    sudo apt-get install python-libtorrent
+    virtualenv --system-site-packages env
+    source env/bin/activate
+    pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+
+or install dependencies to system::
 
     sudo apt-get install python-libtorrent
     sudo pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize

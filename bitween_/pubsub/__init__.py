@@ -1,43 +1,3 @@
-"""
-PubSub for inter process communication
-
-holds topics to subscribe and methods to publish to those topics.
-
-usage
-=====
-
-basic::
-
-    # create the subscriber object ans subscribe to topic 'myTopic'
-
-    s = Subscriber()
-    s.subscribe('myTopic')
-
-    def loop():
-        while True:
-            if s.has_messages():
-                (topic, args, kwargs) = s.get()
-                print('%s, %s, %s' % topic, args, kwargs)
-
-    (maybe from another thread and object) post to the topic:
-    publish('myTopic', 'somestring', val=123)
-
-
-by subclassing::
-
-    class MySub(Subscriber):
-        def __init__(self):
-            super().__init__()
-            self.subscribe('myTopic')
-            self.loop()
-
-        def loop():
-            while True:
-                if self.has_messages():
-                    (topic, args, kwargs) = self.get()
-                    print('%s, %s, %s' % topic, args, kwargs)
-
-"""
 
 from threading import Lock
 import sys
@@ -45,17 +5,61 @@ import logging
 from types import FunctionType
 
 if sys.version_info < (3, 0):
+    reload(sys)
     sys.setdefaultencoding('utf8')
     import Queue as queue
     from Queue import Empty
 else:
+    raw_input = input
     import queue
     from queue import Empty
+
 
 logger = logging.getLogger(__name__)
 
 topics = {}
 lock = Lock()
+
+
+"""
+## how to pubsub
+
+### create a subscriber and subscribe min. one topic
+e.g.
+
+s = Subscriber()
+s.subscribe('myTopic')
+
+### then post to the topic:
+
+publish('myTopic', 'somestring', val=123)
+
+
+### get that message by defining some loop
+
+def loop():
+    while True:
+        if self.has_messages():
+            (topic, args, kwargs) = self.get()
+            print('%s, %s, %s' % topic, args, kwargs)
+
+
+
+## the whole thing as a class
+
+class MySub(Subscriber):
+    def __init__(self):
+        super().__init__()
+        self.subscribe('myTopic')
+        self.loop()
+
+    def loop():
+        while True:
+            if self.has_messages():
+                (topic, args, kwargs) = self.get()
+                print('%s, %s, %s' % topic, args, kwargs)
+
+"""
 
 
 def publish(topic, *args, **kwargs):
@@ -101,7 +105,7 @@ class PubSubscriber:
         self.name = name
         if autosubscribe:
             listen_to = [x for x, y in self.__class__.__dict__.items() if
-                         (type(y) == FunctionType and x.startswith('on_'))]
+                     (type(y) == FunctionType and x.startswith('on_'))]
             for l in listen_to:
                 self.subscribe(l.split('on_')[1])
 
@@ -119,7 +123,7 @@ class PubSubscriber:
     def put_message(self, topic, *args, **kwargs):
         self.queue.put(topic, *args, **kwargs)
 
-    def has_messages(self):
+    def has_messages(self, timeout=None):
         return self.queue.qsize() != 0
 
     def get_message(self, timeout=0.1):
