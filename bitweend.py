@@ -32,10 +32,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    setup_logging()
     if args.debug:
-        setup_logging(default_level=logging.DEBUG)
-    else:
-        setup_logging(default_level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
 
     logger = logging.getLogger(__name__)
 

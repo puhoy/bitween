@@ -1,5 +1,5 @@
 """
-PubSub for inter process communication
+PubSub for interprocess communication
 
 holds topics to subscribe and methods to publish to those topics.
 
@@ -41,18 +41,17 @@ by subclassing::
 
 from threading import Lock
 import sys
-import logging
 from types import FunctionType
 
+import logging
+logger = logging.getLogger(__name__)
+
 if sys.version_info < (3, 0):
-    sys.setdefaultencoding('utf8')
     import Queue as queue
     from Queue import Empty
 else:
     import queue
     from queue import Empty
-
-logger = logging.getLogger(__name__)
 
 topics = {}
 lock = Lock()

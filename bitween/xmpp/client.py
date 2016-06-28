@@ -3,6 +3,8 @@ import sleekxmpp
 from ..pubsub import PubSubscriber
 from . import share_plugin
 
+from . import logger
+
 if sys.version_info < (3, 0):
     sys.setdefaultencoding('utf8')
 

@@ -21,7 +21,7 @@ from ..models import user_shares
 from bitween.core.models import own_shares
 from bitween.core.models import addresses_ports
 
-logger = logging.getLogger(__name__)
+from . import logger
 
 import chardet
 

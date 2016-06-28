@@ -1,10 +1,8 @@
 import netifaces
 import ipgetter
 
-import logging
-
 from .. import conf
-logger = logging.getLogger(__name__)
+
 
 
 class Addresses:

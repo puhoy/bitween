@@ -5,8 +5,6 @@ this module loads the configuration and ensures that a default save path is avai
 import json
 import os
 
-
-
 here = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 
 with open(os.path.join(here, '..', 'conf.json')) as f:
