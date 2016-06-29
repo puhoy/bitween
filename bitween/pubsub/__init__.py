@@ -45,6 +45,7 @@ from types import FunctionType
 
 import logging
 logger = logging.getLogger(__name__)
+logger.info('starting %s' % __name__)
 
 if sys.version_info < (3, 0):
     import Queue as queue

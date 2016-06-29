@@ -2,7 +2,8 @@ from sleekxmpp.plugins.base import BasePlugin
 from . import stanza
 from .stanza import UserSharesStanza, ShareItemStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
-
+import logging
+logger = logging.getLogger(__name__)
 
 class UserShares(BasePlugin):
     """

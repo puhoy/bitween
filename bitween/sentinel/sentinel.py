@@ -1,13 +1,14 @@
-
 from threading import Thread
 
-from ..bt.client import BitTorrentClient
-from ..xmpp.client import XmppClient
+from ..bt import BitTorrentClient
+from ..xmpp import XmppClient
 
 from bitween.pubsub import PubSubscriber
 
 from . import logger
-
+from . import own_addresses
+from .. import conf
+from ..jsonrpc_api import JsonRpcAPI
 
 def create_xmpp_client(jid, password):
     c = XmppClient(jid, password)
@@ -20,9 +21,6 @@ def create_torrent_client():
     ts = BitTorrentClient()
     ts.start()
     return ts
-
-
-from .. import conf
 
 
 class Sentinel(Thread, PubSubscriber):
@@ -42,8 +40,7 @@ class Sentinel(Thread, PubSubscriber):
         self.api = JsonRpcAPI(api_host, api_port)
         self.end = False
         self.got_ip = False
-
-        self.addresses = addresses_ports
+        self.bt_ready = False
 
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
@@ -70,32 +67,35 @@ class Sentinel(Thread, PubSubscriber):
                 except Exception as e:
                     logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-        logging.info('quitting')
+        logger.info('quitting')
 
     def on_bt_ready(self):
-        self.addresses.ports.append(self.bt_client['client'].session.listen_port())
-        #self.addresses.port = self.bt_client['client'].session.ssl_listen_port()
+        own_addresses.ports.append(self.bt_client['client'].session.listen_port())
+        # self.own_addresses.port = self.bt_client['client'].session.ssl_listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
-        self.publish('update_shares')
+        self.bt_ready = True
+        self.publish('publish_shares')
 
+    def on_got_ip(self):
+        self.got_ip = True
 
     def on_set_port(self, port):
         logger.debug('setting external port to %s' % port)
-        self.addresses.nat_ports = [port]
-        logger.debug('new nat port list: %s' % self.addresses.nat_ports)
-        self.publish('update_shares')
-
+        own_addresses.nat_ports = [port]
+        logger.debug('new nat port list: %s' % own_addresses.nat_ports)
+        self.publish('publish_shares')
 
     def on_add_file(self, file):
         logger.debug('adding file')
         self.publish('generate_torrent', file)
 
-    def on_new_handle(self):
+    def on_publish_shares(self):
         """
         updates the list of handles and triggers all xmpp clients to send the new file list
         """
-        self.publish('update_shares')  # call method on xmpp clients
+        if self.got_ip and self.bt_ready:
+            self.publish('update_shares')  # call method on xmpp clients
         pass
 
     def on_exit(self):

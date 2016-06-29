@@ -17,18 +17,15 @@ from threading import Thread
 import libtorrent as lt
 
 from ..pubsub import PubSubscriber
-from ..models import user_shares
-from bitween.core.models import own_shares
-from bitween.core.models import addresses_ports
+from ..models import contact_shares
+from . import own_shares
+from . import own_addresses
 
 from . import logger
 
 import chardet
 
 from .. import conf
-
-if sys.version_info < (3, 0):
-    sys.setdefaultencoding('utf8')
 
 
 def decode_string(s, encoding="utf8"):
@@ -254,10 +251,10 @@ class BitTorrentClient(Thread, PubSubscriber):
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
-                #elif alert.what() == "torrent_update_alert":
+                # elif alert.what() == "torrent_update_alert":
                 #    self.set_shares()
                 #    self.publish('new_handle')
-                #elif alert.what() == "state_update_alert":
+                # elif alert.what() == "state_update_alert":
                 #    self.set_shares()
                 #    self.publish('new_handle')
                 elif alert.what() == "file_error_alert":
@@ -280,7 +277,7 @@ class BitTorrentClient(Thread, PubSubscriber):
                 elif alert.what() == "metadata_received_alert":
                     # send shares when we have enough data to tell someone about it
                     self.set_shares()
-                    self.publish('new_handle')
+                    self.publish('publish_shares')
                 elif alert.what() == "portmap_error_alert":
                     logger.error('portmap error: %s' % alert.error)
                 else:
@@ -364,67 +361,23 @@ class BitTorrentClient(Thread, PubSubscriber):
         handle = lt.add_magnet_uri(self.session, utf8_encoded(link), params)
         self.handles.append(handle)
         logger.debug('adding peers to handle...')
-        own_addresses = addresses_ports.ip_v4 + addresses_ports.ip_v6
-        addr_tuples = user_shares.hashes.get(sha_hash, [])
+        addr_tuples = contact_shares.hashes.get(sha_hash, [])
 
         if not addr_tuples:
             logger.error('no addresses for %s' % sha_hash)
             return None
+
         for addr_tuple in addr_tuples:
             print('adding %s:%s' % addr_tuple)
-            if addr_tuple[0] not in own_addresses:
+            if addr_tuple[0] not in own_addresses.ip_v4 + own_addresses.ip_v6:
                 logger.debug('adding peer to %s: %s:%s' % (sha_hash, addr_tuple[0], addr_tuple[1]))
                 try:
                     handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
                 except Exception as e:
                     logger.error('cant connect to %s:%s: %s' % (addr_tuple[0], addr_tuple[1], e))
+
         logger.debug('done!')
-        self.publish('new_handle')
-
-    def on_add_magnetlink(self, magnetlink, save_path):
-        """
-        creates a handle for a magnetlink and adds it to the session
-
-        :param magnetlink: string with the magnetlink
-        :param save_path: string with the path to save
-        :return:
-        """
-        logger.info("adding mlink %s" % magnetlink)
-        # handle = lt.add_magnet_uri(self.session, magnetlink, {'save_path': save_path})
-        params = {
-            'save_path': save_path,
-            'duplicate_is_error': True
-        }
-
-        link = magnetlink
-        handle = lt.add_magnet_uri(self.session, link, params)
-        # params = lt.parse_magnet_uri(magnetlink)
-        # logger.debug(params)
-
-        # {'storage_mode': libtorrent.storage_mode_t.storage_mode_sparse,
-        # 'source_feed_url': '',
-        # 'name': 'Release.key',
-        # 'trackers': [],
-        # 'url': '',
-        # 'ti': None,
-        # 'info_hash': <libtorrent.sha1_hash object at 0x7f050ff2dad0>,
-        # 'flags': 2147484272,
-        # 'save_path': '',
-        # 'dht_nodes': [],
-        # 'uuid': ''}
-
-        # params['info_hash'] = str(params['info_hash'])
-        # logging.debug('hash as bytes: %s' % params['info_hash'])
-        # handle = self.session.add_torrent(params)
-
-        # logger.debug('added handle-hash %s' % handle.info_hash())
-        # info = handle.torrent_file()
-        # logger.debug('added handle-hash %s' % info.info_hash())
-
-        self.handles.append(handle)
-        self.set_shares()
-        self.publish('new_handle')
-        # self.torrent_added.emit(handle)
+        self.publish('publish_shares')
 
     def on_add_torrent(self, torrentfilepath, save_path):
         """
@@ -438,7 +391,7 @@ class BitTorrentClient(Thread, PubSubscriber):
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
         self.on_add_torrent_by_info(info, save_path)
-        self.publish('new_handle')
+        self.publish('publish_shares')
 
     def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
@@ -458,7 +411,7 @@ class BitTorrentClient(Thread, PubSubscriber):
 
         self.handles.append(handle)
         self.set_shares()
-        self.publish('new_handle')
+        self.publish('publish_shares')
         # self.torrent_added.emit(handle)
 
     def on_generate_torrent(self, folder):

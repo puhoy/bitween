@@ -4,7 +4,7 @@ import sys
 
 from argparse import ArgumentParser
 
-from bitween.core.sentinel import Sentinel
+from bitween.sentinel import Sentinel
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -13,10 +13,6 @@ else:
     raw_input = input
 
 
-
-#@arg('jid', help='jabber id')
-#@arg('-p', '--password', help='password')
-#@arg('-s', nargs='*', type=str, help='list of files to share')
 def start(api_host, api_port):
     s = Sentinel(api_host, api_port)
     s.start()
@@ -24,18 +20,20 @@ def start(api_host, api_port):
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
     parser.add_argument("--debug", default=False, action='store_true')
 
-
     args = parser.parse_args()
 
-    setup_logging()
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        setup_logging(default_level=logging.DEBUG)
+    else:
+        setup_logging(default_level=logging.INFO)
 
-    logger = logging.getLogger(__name__)
+    logger.debug('starting up')
 
     start(args.bind, args.port)

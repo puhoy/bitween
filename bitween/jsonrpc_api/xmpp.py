@@ -4,7 +4,7 @@ XMPP related functions of the JSONRPCAPI
 
 from . import logger
 from . import jsonrpc
-from ..models import user_shares
+from ..models import contact_shares
 from flask import jsonify
 
 

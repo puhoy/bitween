@@ -3,7 +3,6 @@ BitTorrent related functions of the JSONRPCAPI
 """
 
 from . import logger
-from . import jsonrpc
 
 import os
 
@@ -11,7 +10,7 @@ from flask import jsonify
 
 from ..pubsub import publish
 from . import jsonrpc
-from bitween.core.models import own_shares
+from ..models import own_shares
 
 
 @jsonrpc.method('bt.get_torrents')

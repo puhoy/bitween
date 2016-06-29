@@ -1,7 +1,7 @@
 import os
-import json
-import logging.config
+import yaml
 
+import logging.config
 
 def setup_logging(
         default_path='logging.json',
@@ -17,7 +17,8 @@ def setup_logging(
         path = value
     if os.path.exists(path):
         with open(path, 'rt') as f:
-            config = json.load(f)
+            config = yaml.load(f)
+            config['handlers']['console']['level'] = logging._levelNames(default_level)
         logging.config.dictConfig(config)
 
     logging.basicConfig(level=default_level)
