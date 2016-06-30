@@ -20,7 +20,7 @@ else:
         "enable_upnp": True,
         "enable_natpmp": True
     }
-    
+
 # create default dir for storing data we leech
 save_path = conf.get('save_path', 'share')
 if not os.path.isdir(save_path):

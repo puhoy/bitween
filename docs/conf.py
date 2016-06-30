@@ -25,6 +25,32 @@ import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath('..'))
 
+class Mock(object):
+
+    __all__ = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            mock_type = type(name, (), {})
+            mock_type.__module__ = __name__
+            return mock_type
+        else:
+            return Mock()
+
+MOCK_MODULES = ['libtorrent']
+
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
