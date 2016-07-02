@@ -11,11 +11,13 @@ virtualenv:
   system_site_packages: true
 
 sudo: required
+
 services:
   - docker
 
 env:
   COMPOSE_VERSION: 1.7.1
+  DOCKER_VERSION: 1.8.3
 
 before_install:
  - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
