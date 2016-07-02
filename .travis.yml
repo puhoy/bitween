@@ -12,6 +12,7 @@ virtualenv:
 
 before_install:
   - sudo apt-get install python-libtorrent
+  - docker-compose -f tests/test-env/docker-compose.yml up -d
 
 install:
   - pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize coveralls

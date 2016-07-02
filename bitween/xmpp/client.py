@@ -7,6 +7,7 @@ from . import own_shares
 from . import own_addresses
 from . import logger
 
+
 class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def __init__(self, jid, password):
         PubSubscriber.__init__(self, autosubscribe=True)

@@ -1,0 +1,18 @@
+# adapted from the docker run command at https://github.com/prosody/prosody-docker
+
+version: "2"
+services:
+  prosody:
+    build: .
+       #-v /data/prosody/configuration:/etc/prosody \
+       #-v /logs/prosody:/var/log/prosody \
+       #-v /data/prosody/modules:/usr/lib/prosody-modules \
+
+    ports:
+      - 5222:5222
+      - 5269:5269
+      - localhost:5347:5347
+    environment:
+      LOCAL: admin
+      DOMAIN: localhost
+      PASSWORD: 12345
