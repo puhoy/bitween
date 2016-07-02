@@ -20,11 +20,12 @@ services:
   - docker
 
 before_install:
+ - sudo apt-get update
+ - sudo apt-get install docker-engine python-libtorrent -y
  - docker --version
  - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
  - chmod +x docker-compose
  - sudo mv docker-compose /usr/local/bin
- - sudo apt-get install python-libtorrent -y
  - docker-compose -f tests/test-env/docker-compose.yml up --force-recreate
 
 install:
