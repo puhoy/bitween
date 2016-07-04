@@ -3,7 +3,9 @@ from . import stanza
 from .stanza import UserSharesStanza, ShareItemStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class UserShares(BasePlugin):
     """
@@ -47,10 +49,12 @@ class UserShares(BasePlugin):
 
         shares = UserSharesStanza()
         shares['resource'] = self.xmpp.boundjid.resource
+        logging.info('publishing %s handles' % len(handles))
 
         if handles:
             for h in handles:
                 if h.get('hash', False):
+                    logging.info('adding hash %s of file %s' % (h.get('hash'), h.get("name", None)))
                     shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
                 else:
                     logger.error('NO HASH FOR HANDLE!')

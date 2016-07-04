@@ -6,8 +6,8 @@ from bitween.pubsub import publish
 from time import sleep
 
 
-class BasicTestSuite(unittest.TestCase):
-    """Basic test cases."""
+class BasicXMPPTestSuite(unittest.TestCase):
+    """Basic XMPP test cases."""
 
     def test_xmpp_connects_and_exits(self):
         c1 = XmppClient("u1@localhost", 12345)

@@ -4,4 +4,4 @@ omit =
     */site-packages/*
 
 include =
-    bitween/*
+    ./bitween/*

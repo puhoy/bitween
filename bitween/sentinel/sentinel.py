@@ -1,14 +1,20 @@
 from threading import Thread
-
-from ..bt import BitTorrentClient
-from ..xmpp import XmppClient
-
 from bitween.pubsub import PubSubscriber
 
 from . import logger
-from . import own_addresses
 from .. import conf
+
+
+from .. import models
+
+
+models.contact_shares = models.ContactShares()
+models.own_shares = models.OwnShares([])
+
+from ..bt import BitTorrentClient
+from ..xmpp import XmppClient
 from ..jsonrpc_api import JsonRpcAPI
+
 
 def create_xmpp_client(jid, password):
     c = XmppClient(jid, password)
@@ -42,6 +48,8 @@ class Sentinel(Thread, PubSubscriber):
         self.got_ip = False
         self.bt_ready = False
 
+        models.own_addresses = models.Addresses()
+
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
         c = create_xmpp_client(jid=jid, password=password)
@@ -53,7 +61,6 @@ class Sentinel(Thread, PubSubscriber):
 
     def run(self):
         self.api.start()
-        self.add_bt_client()
         logger.debug('starting loop')
         while not self.end:
             # news?
@@ -70,7 +77,7 @@ class Sentinel(Thread, PubSubscriber):
         logger.info('quitting')
 
     def on_bt_ready(self):
-        own_addresses.ports.append(self.bt_client['client'].session.listen_port())
+        models.own_addresses.ports.append(self.bt_client['client'].session.listen_port())
         # self.own_addresses.port = self.bt_client['client'].session.ssl_listen_port()
         for xmpp_account in conf.get('xmpp_accounts', []):
             self._add_xmpp_client(xmpp_account['jid'], xmpp_account['password'])
@@ -79,6 +86,7 @@ class Sentinel(Thread, PubSubscriber):
 
     def on_got_ip(self):
         self.got_ip = True
+        self.add_bt_client()
 
     def on_set_port(self, port):
         logger.debug('setting external port to %s' % port)
@@ -96,7 +104,8 @@ class Sentinel(Thread, PubSubscriber):
         """
         if self.got_ip and self.bt_ready:
             self.publish('update_shares')  # call method on xmpp clients
-        pass
+        else:
+            print('%s %s' % (self.got_ip, self.bt_ready))
 
     def on_exit(self):
 

@@ -19,6 +19,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.register_plugin('xep_0004')
         self.register_plugin('xep_0030')
+        self.register_plugin('xep_0033')
         self.register_plugin('xep_0060')
         self.register_plugin('xep_0115')
         self.register_plugin('xep_0118')

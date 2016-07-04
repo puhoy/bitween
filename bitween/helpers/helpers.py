@@ -41,7 +41,7 @@ def get_ip_addresses():
 
     ip_v4 = ""
     while not ip_v4:
-        logger.debug('getting ip...')
+        logger.info('getting ip...')
         ip_v4 = ipgetter.myip()
         logger.debug('ipgetter got %s' % ip_v4)
 
