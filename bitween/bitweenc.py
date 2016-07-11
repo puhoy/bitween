@@ -1,4 +1,4 @@
-from bitween.log import setup_logging
+from log import setup_logging
 import logging
 import requests
 import random

@@ -2,9 +2,9 @@ import netifaces
 import ipgetter
 
 from . import logger
-from .. import conf
-from ..helpers import get_ip_addresses
-from bitween.pubsub import publish
+from .config import conf
+from helpers import get_ip_addresses
+from pubsub import publish
 
 
 class Addresses:
@@ -27,22 +27,12 @@ class Addresses:
             ports = []
         self.ports = ports
         """
-        addresses = get_ip_addresses()
 
-        if conf.get("enable_ipv4", False):
-            self.ip_v4 = addresses.get('ip_v4', [])
-        else:
-            self.ip_v4 = []
-
-        if conf.get("enable_ipv6", False):
-            self.ip_v6 = addresses.get('ip_v6', [])
-        else:
-            self.ip_v6 = []
+        self.ip_v4 = []
+        self.ip_v6 = []
 
         self.ports = []
         self.nat_ports = []
-
-        publish('got_ip')
 
     def has_ip_v4(self):
         return self.ip_v4 is not []
@@ -50,7 +40,11 @@ class Addresses:
     def has_ip_v6(self):
         return self.ip_v6 is not []
 
+    def fetch_addresses(self):
+        addresses = get_ip_addresses()
 
+        if conf.get("enable_ipv4", False):
+            self.ip_v4 = addresses.get('ip_v4', [])
 
-
-
+        if conf.get("enable_ipv6", False):
+            self.ip_v6 = addresses.get('ip_v6', [])

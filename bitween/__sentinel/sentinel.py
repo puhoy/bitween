@@ -1,8 +1,8 @@
 from threading import Thread
-from bitween.pubsub import PubSubscriber
+from pubsub import PubSubscriber
 
 from . import logger
-from .. import conf
+from ..bitweend import conf
 
 
 from .. import models
@@ -48,7 +48,6 @@ class Sentinel(Thread, PubSubscriber):
         self.got_ip = False
         self.bt_ready = False
 
-        models.own_addresses = models.Addresses()
 
     def _add_xmpp_client(self, jid, password):
         logger.info('creating new xmpp client for %s' % jid)
@@ -90,8 +89,8 @@ class Sentinel(Thread, PubSubscriber):
 
     def on_set_port(self, port):
         logger.debug('setting external port to %s' % port)
-        own_addresses.nat_ports = [port]
-        logger.debug('new nat port list: %s' % own_addresses.nat_ports)
+        models.own_addresses.nat_ports = [port]
+        logger.debug('new nat port list: %s' % models.nat_ports)
         self.publish('publish_shares')
 
     def on_add_file(self, file):

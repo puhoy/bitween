@@ -8,9 +8,9 @@ import os
 
 from flask import jsonify
 
-from ..pubsub import publish
+from pubsub import publish
 from . import jsonrpc
-from ..models import own_shares
+from models import own_shares
 
 
 @jsonrpc.method('bt.get_torrents')

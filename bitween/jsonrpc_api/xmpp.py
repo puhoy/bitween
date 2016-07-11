@@ -4,7 +4,7 @@ XMPP related functions of the JSONRPCAPI
 
 from . import logger
 from . import jsonrpc
-from ..models import contact_shares
+from models import contact_shares
 from flask import jsonify
 
 
@@ -39,4 +39,4 @@ def get_all_hashes():
 
     :return:
     """
-    return jsonify({'hashes': user_shares.hashes})
+    return jsonify({'hashes': contact_shares.hashes})

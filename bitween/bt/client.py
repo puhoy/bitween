@@ -16,16 +16,15 @@ from threading import Thread
 
 import libtorrent as lt
 
-from ..pubsub import PubSubscriber
-from ..models import contact_shares
+from pubsub import PubSubscriber
+from models import contact_shares
 from . import own_shares
-from . import own_addresses
 
 from . import logger
 
 import chardet
 
-from .. import conf
+from models.config import conf
 
 
 def decode_string(s, encoding="utf8"):
@@ -369,12 +368,12 @@ class BitTorrentClient(Thread, PubSubscriber):
 
         for addr_tuple in addr_tuples:
             print('adding %s:%s' % addr_tuple)
-            if addr_tuple[0] not in own_addresses.ip_v4 + own_addresses.ip_v6:
-                logger.debug('adding peer to %s: %s:%s' % (sha_hash, addr_tuple[0], addr_tuple[1]))
-                try:
-                    handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
-                except Exception as e:
-                    logger.error('cant connect to %s:%s: %s' % (addr_tuple[0], addr_tuple[1], e))
+
+            logger.debug('adding peer to %s: %s:%s' % (sha_hash, addr_tuple[0], addr_tuple[1]))
+            try:
+                handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
+            except Exception as e:
+                logger.error('cant connect to %s:%s: %s' % (addr_tuple[0], addr_tuple[1], e))
 
         logger.debug('done!')
         self.publish('publish_shares')

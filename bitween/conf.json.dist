@@ -1,10 +1,9 @@
 {
-  "xmpp_accounts": [
+  "xmpp_account":
     {
       "jid": "user@domain",
       "password": ""
-    }
-  ],
+    },
   "save_path": "share",
   "enable_web_api": true,
   "enable_ipv4": true,

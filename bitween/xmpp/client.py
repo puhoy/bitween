@@ -1,15 +1,23 @@
 import sys
 import sleekxmpp
-from ..pubsub import PubSubscriber
+from pubsub import PubSubscriber
 from . import share_plugin
 from . import contact_shares
 from . import own_shares
-from . import own_addresses
+from models.addresses import Addresses
 from . import logger
+
+from bt import BitTorrentClient
+from jsonrpc_api import JsonRpcAPI
+
+def create_torrent_client():
+    ts = BitTorrentClient()
+    ts.start()
+    return ts
 
 
 class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
-    def __init__(self, jid, password):
+    def __init__(self, jid, password, api_host='localhost', api_port=8080):
         PubSubscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
@@ -31,6 +39,15 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         # self.auto_subscribe = True
 
         self.name = 'xmpp_client_%s' % self.boundjid.bare
+
+        self.addresses = Addresses()
+        self.addresses.fetch_addresses()
+
+        self.api = JsonRpcAPI(api_host, api_port)
+        self.api.start()
+
+        self.bt_client = BitTorrentClient()
+        self.bt_client.start()
 
     def start(self, event):
         """
@@ -65,9 +82,9 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
-    def on_update_shares(self):
+    def on_publish_shares(self):
         logger.debug('publishing shares')
-        self['shares'].publish_shares(own_shares, own_addresses)
+        self['shares'].publish_shares(own_shares, self.addresses)
 
     @staticmethod
     def on_shares_publish(msg):
@@ -99,4 +116,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     def on_exit(self):
         logger.debug('sending empty shares')
         self['shares'].stop()
+
+        self.bt_client.join()
+        self.api.join()
+
         self.disconnect(wait=True)

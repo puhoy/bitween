@@ -1,0 +1,23 @@
+<message to="bitween@xmpp.kwoh.de/athome" type="headline" from="bitween@xmpp.kwoh.de">
+	<event xmlns="http://jabber.org/protocol/pubsub#event">
+		<items node="https://xmpp.kwoh.de/protocol/shares">
+			<item id="current">
+			<shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="ddum">
+				<share hash="8e1f73226bdb5efcd9b3e9631bab992203dabdd5" name="Release.key" size="1093" />
+			</shares>
+			</item>
+		</items>
+	</event>
+</message>
+<message to="bitween@xmpp.kwoh.de/athome" type="headline" from="bitween@xmpp.kwoh.de">
+    <event xmlns="http://jabber.org/protocol/pubsub#event">
+        <items node="https://xmpp.kwoh.de/protocol/shares">
+            <item id="current">
+                <shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="athome">
+                    <share hash="89854c19917b068b449dce9e1b7696e20fb8d138" name="debug.log" size="1697476" />
+                </shares>
+            </item>
+        </items>
+    </event>
+</message>
+DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <iq to="bitween@xmpp.kwoh.de/athome" type="result" id="130588a4-3e6f-4c86-9572-4060d6a71c6a-7"><pubsub xmlns="http://jabber.org/protocol/pubsub"><publish node="https://xmpp.kwoh.de/protocol/shares"><item id="current" /></publish></pubsub></iq>

@@ -4,6 +4,8 @@ from .stanza import UserSharesStanza, ShareItemStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
 
+from models.addresses import Addresses
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,11 +61,11 @@ class UserShares(BasePlugin):
                 else:
                     logger.error('NO HASH FOR HANDLE!')
 
-        if addresses:
-            for addr in addresses.ip_v4 + addresses.ip_v6:
-                for port in addresses.ports + addresses.nat_ports:
-                    logger.debug('adding address: %s:%s' % (addr, port))
-                    shares.add_address(addr, port=port)
+
+        for addr in addresses.ip_v4 + addresses.ip_v6:
+            for port in addresses.ports + addresses.nat_ports:
+                logger.error('adding address: %s:%s' % (addr, port))
+                shares.add_address(addr, port=port)
 
         return self.xmpp['xep_0163'].publish(shares,
                                              node=UserSharesStanza.namespace,
@@ -76,5 +78,5 @@ class UserShares(BasePlugin):
         """
         Clear existing user tune information to stop notifications.
         """
-
-        self.publish_shares([])
+        addresses = Addresses()
+        self.publish_shares(handles=[], addresses=addresses)

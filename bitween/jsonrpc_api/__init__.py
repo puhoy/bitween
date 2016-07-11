@@ -8,8 +8,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 logger.info('initializing %s' % __name__)
-from .. import conf
-from ..models import contact_shares
+from models.config import conf
+from models import contact_shares
 
 from flask import Flask
 from flask import request

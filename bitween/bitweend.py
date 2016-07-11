@@ -1,9 +1,13 @@
-from bitween.log import setup_logging
+from log import setup_logging
 import logging
 import sys
+from models.config import conf
 
 from argparse import ArgumentParser
+import json
+import os
 
+from xmpp import XmppClient
 
 
 if sys.version_info < (3, 0):
@@ -14,11 +18,9 @@ else:
 
 
 def start(api_host, api_port):
-    from bitween.sentinel import Sentinel
-    s = Sentinel(api_host, api_port)
-    s.start()
-    s.join()
-
+    c = XmppClient(conf['xmpp_account']['jid'], conf['xmpp_account']['password'], api_host, api_port)
+    c.connect()
+    c.process()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -34,8 +36,5 @@ if __name__ == "__main__":
         setup_logging(default_level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.info('starting up')
-
-    import time
-    time.sleep(1)
 
     start(args.bind, args.port)
