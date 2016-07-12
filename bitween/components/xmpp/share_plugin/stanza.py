@@ -7,7 +7,7 @@ class UserSharesStanza(ElementBase):
     namespace = 'https://xmpp.kwoh.de/protocol/shares'
     plugin_attrib = 'shares'
 
-    def add_resource(self, resource='', ip='', port=None):
+    def add_resource(self, resource=''):
         """
 
         :param ip:
@@ -15,11 +15,8 @@ class UserSharesStanza(ElementBase):
         :param port: the port bt is listening on
         :return:
         """
-        addr_obj = ResourceStanza(None, self)
-        addr_obj['resource'] = resource
-        addr_obj['address'] = ip
-        addr_obj['port'] = str(port)
-
-        return addr_obj
+        resource_stanza = ResourceStanza(None, self)
+        resource_stanza['resource'] = resource
+        return resource_stanza
 
 

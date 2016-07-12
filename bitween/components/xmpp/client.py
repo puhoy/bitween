@@ -97,10 +97,11 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
     @staticmethod
     def on_shares_publish(msg):
         """ handle incoming files """
-        incoming_shares = msg['pubsub_event']['items']['item']['shares']['share_items']
+        incoming_shares = msg['pubsub_event']['items']['item']['shares']
         addresses = msg['pubsub_event']['items']['item']['shares']['addresses']
-        print('got addresses: %s' % addresses)
         resource = msg['pubsub_event']['items']['item']['shares']['resource']
+
+        print(incoming_shares)
 
         logger.debug('got magnetlinks from %s' % msg['from'])
         contact = str(msg['from'])

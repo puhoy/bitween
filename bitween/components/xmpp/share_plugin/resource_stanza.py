@@ -1,5 +1,5 @@
 from sleekxmpp.xmlstream import ElementBase
-from . import ShareItemStanza
+from . import ShareItemStanza, AddressStanza
 
 
 class ResourceStanza(ElementBase):
@@ -9,8 +9,15 @@ class ResourceStanza(ElementBase):
     name = 'address'
     namespace = 'https://xmpp.kwoh.de/protocol/shares'
     plugin_attrib = 'address'
-    interfaces = set(['resource', 'address', 'port'])
-    plugin_multi_attrib = 'addresses'  # does not show up in the real stanza, just for iterating from sleek
+    interfaces = set(['resource'])
+    plugin_multi_attrib = 'resources'  # does not show up in the real stanza, just for iterating from sleek
+
+    def add_address(self, ip, port):
+        # Use Param(None, self) to link the param object
+        # with the task object.
+        address = AddressStanza(None, self)  # links the item to self
+        address['ip'] = ip
+        address['port'] = port
 
     def add_share(self, hash, name='', size=0):
         # Use Param(None, self) to link the param object

@@ -1,5 +1,6 @@
 from sleekxmpp.plugins.base import register_plugin
 from .share_item_stanza import ShareItemStanza
+from .address_stanza import AddressStanza
 from .resource_stanza import ResourceStanza
 
 from . import stanza

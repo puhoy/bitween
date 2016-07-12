@@ -1,8 +1,6 @@
 from threading import Lock
 
 from . import logger
-import socket
-
 
 from .helpers import is_valid_ipv6_address
 from .helpers import is_valid_ipv4_address
@@ -59,9 +57,9 @@ class ContactShares:
         :return:
         """
         user = self.get_user(jid)
-        if not user.get(resource, {}):
-            user[resource] = {'ip_v4': '',
-                              'ip_v6': '',
+        if not user.get(resource, False):
+            user[resource] = {'ip_v4': [],
+                              'ip_v6': [],
                               'shares': {}
                               }
         return user.get(resource)
@@ -82,6 +80,26 @@ class ContactShares:
             res['ip_v6'].append((address, port))
         else:
             logger.error('invalid address: %s' % address)
+
+    def get_ipv4_addresses(self, jid, resource):
+        """
+
+        :param jid:
+        :param resource:
+        :return:
+        """
+        res = self.get_resource(jid, resource)
+        return res.get('ip_v4', [])
+
+    def get_ipv6_addresses(self, jid, resource):
+        """
+
+        :param jid:
+        :param resource:
+        :return:
+        """
+        res = self.get_resource(jid, resource)
+        return res.get('ip_v6', [])
 
     def clear_addresses(self, jid, resource):
         """
@@ -112,6 +130,9 @@ class ContactShares:
         res['shares'][hash]['size'] = size
         res['shares'][hash]['files'] = files
         res['shares'][hash]['hash'] = hash
+
+    def add_share_by_info(self, jid, resource, info):
+        self.add_share(jid, resource, info.get('hash'), info.get('name', ''), info.get('total_size', 0))
 
     def __iter__(self):
         with self.lock:
