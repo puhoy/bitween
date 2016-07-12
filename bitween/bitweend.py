@@ -2,7 +2,6 @@ from log import setup_logging
 import logging
 import sys
 
-
 from argparse import ArgumentParser
 import json
 import os
@@ -11,7 +10,6 @@ from components.xmpp import XmppClient
 from components import config
 
 conf = config.conf
-
 
 if sys.version_info < (3, 0):
     reload(sys)
@@ -25,7 +23,8 @@ def start(api_host, api_port):
     c.connect()
     c.process()
 
-if __name__ == "__main__":
+
+def main(args=None):
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
@@ -41,3 +40,7 @@ if __name__ == "__main__":
     logger.info('starting up')
 
     start(args.bind, args.port)
+
+
+if __name__ == "__main__":
+    main()

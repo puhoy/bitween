@@ -25,62 +25,66 @@ POST /api
   }
 }
 """
-port = 0
-host = ''
-def post(method, params=None):
-    if params is None:
-        params = []
-    data = {"jsonrpc": "2.0",
-            "method": method,
-            "params": params,
-            "id": "%s" % random.randint(1000, 9999)}
-    ret = requests.post("http://%s:%s/api" % (host, port), data=json.dumps(data))
-    return ret
-
-def exit():
-    method = "Api.exit"
-    print(post(method))
 
 
-def list():
-    hashes = {}
-    method = "Api.get_all_torrents"
-    contacts = post(method).json()['result']
-    #print(contacts)
+class BitweenClient:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
 
-    for contact in contacts:
-        for resource in contacts[contact]:
-            for hash, val_dict in contacts[contact][resource]['shares'].iteritems():
-                c = hashes.get(hash, {'contacts': []}).get('contacts')
-                c.append('%s/%s' % (contact, resource))
-                hashes[hash] = {'name': val_dict['name'],
-                                'size': val_dict['size'],
-                                'contacts': c}
+    def post(self, method, params=None):
+        if params is None:
+            params = []
+        data = {"jsonrpc": "2.0",
+                "method": method,
+                "params": params,
+                "id": "%s" % random.randint(1000, 9999)}
+        ret = requests.post("http://%s:%s/api" % (self.host, self.port), data=json.dumps(data))
+        return ret
 
-    #print(json.dumps(hashes, indent=2))
-    for h, v in hashes.iteritems():
-        print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
+    def exit(self):
+        method = "Api.exit"
+        print(self.post(method))
 
-def add_hash(hash, dest=None):
-    import os
-    if not dest:
-        dest = json.load(open('conf.json'))['save_path']
-    method = "bt.add_torrent_by_hash"
-    params = {
-      "hash": hash,
-      "save_path": os.path.abspath(dest)
-    }
-    print(post(method, params))
+    def list(self):
+        hashes = {}
+        method = "Api.get_all_torrents"
+        contacts = self.post(method).json()['result']
+        # print(contacts)
 
-def add_path(path):
-    method = "bt.add_path"
-    params = {
-      "path": path
-    }
-    print(post(method, params))
+        for contact in contacts:
+            for resource in contacts[contact]:
+                for hash, val_dict in contacts[contact][resource]['shares'].iteritems():
+                    c = hashes.get(hash, {'contacts': []}).get('contacts')
+                    c.append('%s/%s' % (contact, resource))
+                    hashes[hash] = {'name': val_dict['name'],
+                                    'size': val_dict['size'],
+                                    'contacts': c}
+
+        # print(json.dumps(hashes, indent=2))
+        for h, v in hashes.iteritems():
+            print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
+
+    def add_hash(self, hash, dest=None):
+        import os
+        if not dest:
+            dest = json.load(open('conf.json'))['save_path']
+        method = "bt.add_torrent_by_hash"
+        params = {
+            "hash": hash,
+            "save_path": os.path.abspath(dest)
+        }
+        print(self.post(method, params))
+
+    def add_path(self, path):
+        method = "bt.add_path"
+        params = {
+            "path": path
+        }
+        print(self.post(method, params))
 
 
-if __name__ == "__main__":
+def main(args=None):
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
@@ -94,20 +98,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    host = args.bind
-    port = args.port
+    bc = BitweenClient(args.bind, args.port)
 
     if args.exit:
-        exit()
+        bc.exit()
     elif args.list:
-        list()
+        bc.list()
     elif args.add_hash:
         if not args.dest:
-            add_hash(args.add_hash)
+            bc.add_hash(args.add_hash)
         else:
-            add_hash(args.add_hash, args.dest)
+            bc.add_hash(args.add_hash, args.dest)
     elif args.add_path:
         print('adding %s' % os.path.abspath(args.add_path))
-        add_path(args.add_path)
+        bc.add_path(args.add_path)
 
 
+if __name__ == '__main__':
+    main()

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open('README.md') as f:
     readme = f.read()
 
-#with open('LICENSE') as f:
+# with open('LICENSE') as f:
 #    license = f.read()
 
 setup(
@@ -13,7 +13,13 @@ setup(
     long_description=readme,
     author='Jan Hartmann',
     url='https://github.com/puhoy/bitween',
-    #license=license,
+    # license=license,
     packages=find_packages(exclude=('tests', 'docs')),
-    test_suite="tests"
+    test_suite="tests",
+    entry_points={
+        'console_scripts': [
+            'bitweend=bitween.bitweend:main',
+            'bitweenc=bitween.bitweenc:main'
+        ]
+    },
 )
