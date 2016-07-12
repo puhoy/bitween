@@ -3,7 +3,7 @@ import sleekxmpp
 from .. import PubSubscriber
 
 from .. import contact_shares
-from .. import own_shares
+from .. import handles
 from .. import Addresses
 
 from . import logger
@@ -92,7 +92,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
     def on_publish_shares(self):
         logger.debug('publishing shares')
-        self['shares'].publish_shares(own_shares, self.addresses)
+        self['shares'].publish_shares(handles.get_shares(), self.addresses)
 
     @staticmethod
     def on_shares_publish(msg):

@@ -1,6 +1,6 @@
 from .pubsub import PubSubscriber, publish
 
-from .models import contact_shares, own_shares, config, Addresses
+from .models import contact_shares, handles, config, Addresses
 
 from .bt import BitTorrentClient
 

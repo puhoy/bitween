@@ -10,13 +10,13 @@ from flask import jsonify
 
 from .. import publish
 from . import jsonrpc
-from .. import own_shares
+from .. import handles
 
 
 @jsonrpc.method('bt.get_torrents')
 def get_torrents():
     torrents = []
-    for t in own_shares:
+    for t in handles.get_shares():
         torrents.append(t)
     return jsonify({"torrents": torrents})
 

@@ -18,7 +18,7 @@ import libtorrent as lt
 
 from . import PubSubscriber
 from ..models import contact_shares
-from . import own_shares
+from . import handles
 
 from . import logger
 
@@ -103,7 +103,7 @@ class BitTorrentClient(Thread, PubSubscriber):
         self.session.set_alert_mask(lt.alert.category_t.all_categories)
         logger.info('libtorrent %s' % lt.version)
 
-        self.handles = []
+        self.handles = handles
 
         """-----alert categories-----
         error_notification
@@ -253,16 +253,13 @@ class BitTorrentClient(Thread, PubSubscriber):
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                 # elif alert.what() == "torrent_update_alert":
-                #    self.set_shares()
                 #    self.publish('new_handle')
                 # elif alert.what() == "state_update_alert":
-                #    self.set_shares()
                 #    self.publish('new_handle')
                 elif alert.what() == "file_error_alert":
                     logger.error("FILE ERROR: %s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 elif (alert.what() == "listen_failed_alert"):
@@ -277,7 +274,6 @@ class BitTorrentClient(Thread, PubSubscriber):
                     self.publish('set_port', alert.external_port)
                 elif alert.what() == "metadata_received_alert":
                     # send shares when we have enough data to tell someone about it
-                    self.set_shares()
                     self.publish('publish_shares')
                 elif alert.what() == "portmap_error_alert":
                     logger.error('portmap error: %s' % alert.error)
@@ -306,13 +302,11 @@ class BitTorrentClient(Thread, PubSubscriber):
                     self.session.remove_torrent(handle)
                     # print(self.session.wait_for_alert(1000))
                     self.handles.remove(handle)
-                    self.set_shares()
                 elif (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
                     logger.debug("removing %s" % handle.name())
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
-                    self.set_shares()
                 elif (alert.what() == "stats_alert"):
                     pass
                 else:
@@ -411,7 +405,6 @@ class BitTorrentClient(Thread, PubSubscriber):
             handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
 
         self.handles.append(handle)
-        self.set_shares()
         self.publish('publish_shares')
         # self.torrent_added.emit(handle)
 
@@ -505,32 +498,4 @@ class BitTorrentClient(Thread, PubSubscriber):
         db.commit()
         db.close()
 
-    def set_shares(self):
-        infos = []
-        for handle in self.handles:
-            try:
-                info = handle.get_torrent_info()
-                h = {}
 
-                # h['handle'] = '%s' % handle
-                h['files'] = []
-                h['total_size'] = info.total_size()
-
-                h['name'] = info.name()
-                h['hash'] = u'%s' % handle.info_hash()
-
-                try:
-                    files = info.files()  # the filestore object
-                except:
-                    files = []
-
-                for f in files:
-                    h['files'].append(
-                        {
-                            'path': f.path,  # filename for file at index f
-                            # 'size': files.file_size(f)
-                        })
-                infos.append(h)
-            except Exception as e:
-                logger.error('error while building torrent list: %s' % e)
-        own_shares.rebuild(infos)

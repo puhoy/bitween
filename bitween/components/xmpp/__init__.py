@@ -1,7 +1,7 @@
 import logging
 
 from .. import contact_shares
-from .. import own_shares
+from .. import handles
 from .. import Addresses
 
 logger = logging.getLogger(__name__)
