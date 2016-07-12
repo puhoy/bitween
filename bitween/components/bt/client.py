@@ -252,14 +252,15 @@ class BitTorrentClient(Thread, PubSubscriber):
                 if (alert.what() == "save_resume_data_alert") \
                         or (alert.what() == "save_resume_data_failed_alert"):
                     handle = alert.handle
-                # elif alert.what() == "torrent_update_alert":
-                #    self.publish('new_handle')
-                # elif alert.what() == "state_update_alert":
-                #    self.publish('new_handle')
+                elif alert.what() == "torrent_update_alert":
+                    self.publish('publish_shares')
+                elif alert.what() == "state_update_alert":
+                    self.publish('publish_shares')
                 elif alert.what() == "file_error_alert":
                     logger.error("FILE ERROR: %s" % alert.error)
                     self.session.remove_torrent(handle)
                     self.handles.remove(handle)
+                    self.publish('publish_shares')
                 elif (alert.what() == "stats_alert"):
                     pass
                 elif (alert.what() == "listen_failed_alert"):
@@ -346,6 +347,18 @@ class BitTorrentClient(Thread, PubSubscriber):
             return False
 
     def on_add_hash(self, sha_hash, save_path):
+        """
+        add a hash to the torrent session
+        used to download new stuff.
+
+        after creation of the torrent all addresses that we have collected for the hash will be added
+
+        :param sha_hash: hash of the torrent
+        :type sha_hash: str
+        :param save_path: path to save
+        :type save_path: str
+        :return:
+        """
         mlink = 'magnet:?xt=urn:btih:%s' % sha_hash
         params = {
             'save_path': save_path,
@@ -363,16 +376,13 @@ class BitTorrentClient(Thread, PubSubscriber):
             return None
 
         for addr_tuple in addr_tuples:
-            print('adding %s:%s' % addr_tuple)
-
-            logger.debug('adding peer to %s: %s:%s' % (sha_hash, addr_tuple[0], addr_tuple[1]))
+            logger.debug('adding peer to %s: %s:%s'
+                         % (sha_hash, addr_tuple[0], addr_tuple[1]))
             try:
                 handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
             except Exception as e:
-                logger.error('cant connect to %s:%s: %s' % (addr_tuple[0], addr_tuple[1], e))
-
-        logger.debug('done!')
-        self.publish('publish_shares')
+                logger.error('cant connect to %s:%s: %s' %
+                             (addr_tuple[0], addr_tuple[1], e))
 
     def on_add_torrent(self, torrentfilepath, save_path):
         """
@@ -399,48 +409,64 @@ class BitTorrentClient(Thread, PubSubscriber):
         """
         if not resumedata:
             logger.debug("no resume data!")
-            handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path})
+            handle = self.session.add_torrent(
+                {
+                    'ti': torrentinfo,
+                    'save_path': save_path
+                })
         else:
             logger.debug('resuming')
-            handle = self.session.add_torrent({'ti': torrentinfo, 'save_path': save_path, 'resume_data': resumedata})
+            handle = self.session.add_torrent(
+                {
+                    'ti': torrentinfo,
+                    'save_path': save_path,
+                    'resume_data': resumedata
+                })
 
         self.handles.append(handle)
         self.publish('publish_shares')
-        # self.torrent_added.emit(handle)
 
-    def on_generate_torrent(self, folder):
-        '''
+    def on_generate_torrent(self, path):
+        """
         generates a handle for a file or folder
-        '''
+
+        :param path: path to generate a handle for
+        :type path: str
+        :return:
+        """
         logging.info('generating a new torrent for %s in %s' % (
-            os.path.abspath(folder), os.path.abspath(os.path.join(os.path.abspath(folder), os.pardir))))
+            os.path.abspath(path), os.path.abspath(os.path.join(os.path.abspath(path), os.pardir))))
 
         fs = lt.file_storage()
-        lt.add_files(fs, os.path.abspath(folder))
+        lt.add_files(fs, os.path.abspath(path))
         t = lt.create_torrent(fs)
         t.set_creator('bitween')  # %s' % lt.version)
         lt.set_piece_hashes(t,
                             os.path.abspath(os.path.join(
-                                folder,
+                                path,
                                 os.pardir)))  # file and the folder it is in
-        logger.debug('...')
         torrent = t.generate()
         logger.debug('generated')
         info = lt.torrent_info(torrent)
         self.on_add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
-            folder,
+            path,
             os.pardir)))
 
     def on_del_torrent(self, handle):
-        """saves the resume data for torrent
-        when done, save_resume_data_alert will be thrown, then its safe to really delete the torrent
         """
-        handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)  # creates save_resume_data_alert
-        # self.torrent_deleted.emit(handle)
+        trigger creation of save_resume_data_alert to save the resume data for torrent
+        resume data can be given to save method to store to sqlite (see "while handles" loop in run method)
+
+        :param handle:
+        :return:
+        """
+
+        # creates save_resume_data_alert
+        handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
 
     def save(self, handle, resume_data):
         """
-        called when the "save_resume_data_alert" is recieved while ending.
+        called when the "save_resume_data_alert" is recieved while shutdown.
         saves handle with resume_data to database
 
         :param handle:
@@ -488,7 +514,7 @@ class BitTorrentClient(Thread, PubSubscriber):
     def erase_all_torrents_from_db(self):
         """
         removes all torrents from the session.
-        done before the program quits to flush the db for the current torrents
+        called before the current torrents are going to be saved
 
         :return:
         """
@@ -497,5 +523,3 @@ class BitTorrentClient(Thread, PubSubscriber):
         c.execute("DELETE FROM torrents")
         db.commit()
         db.close()
-
-

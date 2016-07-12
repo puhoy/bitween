@@ -11,7 +11,7 @@ things you will need
 on ubuntu
 ~~~~~~~~~
 
-tested on python2,7, could work on python3
+tested on python2.7, could work on python3
 
 clone to where ever you like::
 
@@ -40,15 +40,14 @@ use as many accounts as you like. the save_path is the default save path to down
 ::
 
     {
-      "xmpp_accounts": [
-        {
+      "xmpp_account": {
           "jid": "user@domain",
           "password": ""
-        }
-      ],
+      }
+
       "save_path": "share",
       "enable_ipv4": true,
-      "enable_ipv6": true,
+      "enable_ipv6": false,
       "enable_upnp": true,
       "enable_natpmp": true
     }
