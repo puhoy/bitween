@@ -21,14 +21,14 @@ def get_torrents():
     return jsonify({"torrents": torrents})
 
 
-@jsonrpc.method('bt.add_file', file='')
-def add_file(file=''):
-    logger.info('adding %s to torrents' % file)
-    if os.path.exists(file):
-        publish('generate_torrent', file)
+@jsonrpc.method('bt.add_path', path='')
+def add_path(path=''):
+    logger.info('adding %s to torrents' % os.path.abspath(path))
+    if os.path.exists(path):
+        publish('generate_torrent', os.path.abspath(path))
         return True
     else:
-        logger.error('error: %s does not exist' % file)
+        logger.error('error: %s does not exist' % os.path.abspath(path))
         return False
 
 

@@ -1,6 +1,6 @@
 from sleekxmpp.plugins.base import BasePlugin
 from . import stanza
-from . import UserSharesStanza, ShareItemStanza, ResourceStanza
+from . import UserSharesStanza, ShareItemStanza, ResourceStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
 
@@ -32,7 +32,8 @@ class UserShares(BasePlugin):
 
     def session_bind(self, jid):
         register_stanza_plugin(UserSharesStanza, ResourceStanza, iterable=True)
-        register_stanza_plugin(UserSharesStanza, ShareItemStanza, iterable=True)
+        register_stanza_plugin(ResourceStanza, ShareItemStanza, iterable=True)
+        register_stanza_plugin(ResourceStanza, AddressStanza, iterable=True)
         self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
 
     def publish_shares(self, handle_infos=None, addresses=None, options=None,
@@ -54,35 +55,37 @@ class UserShares(BasePlugin):
         logger.error(addresses.ports + addresses.nat_ports)
 
         # write shares to contact_shares
-        contact_shares.clear_addresses(self.xmpp.boundjid, self.xmpp.boundjid.resource)
-        contact_shares.clear_shares(self.xmpp.boundjid, self.xmpp.boundjid.resource)
+        contact_shares.clear_addresses(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
+        contact_shares.clear_shares(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
 
         for h in handle_infos:
             if h.get('hash', False):
-                contact_shares.add_share_by_info(self.xmpp.boundjid, self.xmpp.boundjid.resource, h)
+                contact_shares.add_share_by_info(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, h)
         # and add our addresses
+        logger.info('addresses: %s' % (addresses.ip_v4 + addresses.ip_v6))
         for address in addresses.ip_v4 + addresses.ip_v6:
             for port in addresses.ports + addresses.nat_ports:
-                contact_shares.add_address(self.xmpp.boundjid, self.xmpp.boundjid.resource, address, port)
+
+                contact_shares.add_address(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, address, port)
 
 
         # now we need to iterate over all of our resources and shares to publish the new state
         shares_stanza = UserSharesStanza()
         logging.info('publishing %s handles' % len(handle_infos))
 
-        for resource in contact_shares.get_user(self.xmpp.boundjid).keys():
+        for resource in contact_shares.get_user(self.xmpp.boundjid.bare).keys():
             logging.debug('adding resource %s' % resource)
             resource_stanza = shares_stanza.add_resource(resource)
 
-            shares = contact_shares.get_resource(self.xmpp.boundjid, self.xmpp.boundjid.resource)['shares']
+            shares = contact_shares.get_resource(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)['shares']
             for share in shares:
                 logging.debug('adding share %s to stanza' % shares[share]['name'])
                 resource_stanza.add_share(shares[share]['hash'], shares[share]['name'], shares[share]['size'])
 
             logging.info('adding addresses')
             # add ipv4 and v6 addresses
-            address_list = contact_shares.get_ipv4_addresses(self.xmpp.boundjid, self.xmpp.boundjid.resource)
-            address_list += contact_shares.get_ipv6_addresses(self.xmpp.boundjid, self.xmpp.boundjid.resource)
+            address_list = contact_shares.get_ipv4_addresses(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
+            address_list += contact_shares.get_ipv6_addresses(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
             logging.debug('addresslist: %s ' % address_list)
             for address in address_list:
                 logging.info('adding address %s:%s' % (address[0], str(address[1])))

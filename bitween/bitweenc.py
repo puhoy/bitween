@@ -5,6 +5,7 @@ import random
 import json
 from argparse import ArgumentParser
 import humanize
+import os
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -71,10 +72,10 @@ def add_hash(hash, dest=None):
     }
     print(post(method, params))
 
-def add_file(path):
-    method = "bt.add_file"
+def add_path(path):
+    method = "bt.add_path"
     params = {
-      "file": path
+      "path": path
     }
     print(post(method, params))
 
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--add_hash")
 
     parser.add_argument("--dest")
-    parser.add_argument("--add_file")
+    parser.add_argument("--add_path")
     parser.add_argument("--debug", default=False, action='store_true')
 
     args = parser.parse_args()
@@ -105,7 +106,8 @@ if __name__ == "__main__":
             add_hash(args.add_hash)
         else:
             add_hash(args.add_hash, args.dest)
-    elif args.add_file:
-        add_file(args.add_file)
+    elif args.add_path:
+        print('adding %s' % os.path.abspath(args.add_path))
+        add_path(args.add_path)
 
 

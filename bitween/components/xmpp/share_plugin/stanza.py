@@ -3,9 +3,9 @@ from . import ResourceStanza
 
 
 class UserSharesStanza(ElementBase):
-    name = 'shares'
+    name = 'user_shares'
     namespace = 'https://xmpp.kwoh.de/protocol/shares'
-    plugin_attrib = 'shares'
+    plugin_attrib = 'user_shares'
 
     def add_resource(self, resource=''):
         """

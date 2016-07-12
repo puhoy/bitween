@@ -44,6 +44,7 @@ class ContactShares:
         :param jid:
         :return:
         """
+        jid = str(jid)
         if not self.dict.get(jid, {}):
             self.dict[jid] = {}
         user = self.dict.get(jid, {})
@@ -56,6 +57,7 @@ class ContactShares:
         :param resource:
         :return:
         """
+        jid = str(jid)
         user = self.get_user(jid)
         if not user.get(resource, False):
             user[resource] = {'ip_v4': [],
@@ -119,9 +121,12 @@ class ContactShares:
         :param resource:
         :return:
         """
-
         res = self.get_resource(jid, resource)
         res['shares'] = {}
+
+    def clear(self, jid, resource):
+        self.clear_addresses(jid, resource)
+        self.clear_shares(jid, resource)
 
     def add_share(self, jid, resource, hash, name='', size=0, files=None):
         res = self.get_resource(jid, resource)

@@ -6,9 +6,9 @@ class ResourceStanza(ElementBase):
     """
     substanza for UserSharesStanza, one object represents one share
     """
-    name = 'address'
+    name = 'resource'
     namespace = 'https://xmpp.kwoh.de/protocol/shares'
-    plugin_attrib = 'address'
+    plugin_attrib = 'resource'
     interfaces = set(['resource'])
     plugin_multi_attrib = 'resources'  # does not show up in the real stanza, just for iterating from sleek
 
@@ -16,7 +16,7 @@ class ResourceStanza(ElementBase):
         # Use Param(None, self) to link the param object
         # with the task object.
         address = AddressStanza(None, self)  # links the item to self
-        address['ip'] = ip
+        address['address'] = ip
         address['port'] = port
 
     def add_share(self, hash, name='', size=0):
