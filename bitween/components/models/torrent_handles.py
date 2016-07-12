@@ -33,6 +33,9 @@ class Handles:
     def append(self, item):
         self.handles.append(item)
 
+    def remove(self, item):
+        self.handles.remove(item)
+
     def get_shares(self):
         infos = []
         for handle in self.handles:
