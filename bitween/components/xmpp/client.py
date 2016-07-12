@@ -102,42 +102,16 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         logger.info('%s' % incoming_shares)
 
         for resource in incoming_shares['resources']:
+            logger.info('clearing resource %s of user %s' % (resource['resource'], msg['from']))
             contact_shares.clear(msg['from'], resource['resource'])
 
             for item in resource['share_items']:
+                logger.info('adding share %s to resource %s' % (item['name'], resource['resource']))
                 contact_shares.add_share(msg['from'], resource['resource'], item['hash'], item['name'], item['size'])
 
             for address in resource['ip_addresses']:
                 contact_shares.add_address(msg['from'], resource['resource'], address['address'], address['port'])
 
-                # resources = incoming_shares['resources']
-                # logger.info('%s' % resources)
-                #
-                # addresses = incoming_shares['resources']['addresses']
-                # logger.info('%s' % addresses)
-                #
-                # share_items = incoming_shares['resources']['share_items']
-                # logger.info('%s' % share_items)
-                #
-                # logger.debug('got magnetlinks from %s' % msg['from'])
-                # contact = str(msg['from'])
-                #
-                # if incoming_shares is not None:
-                #     contact_shares.clear_shares(contact, resource)
-                #     # res = user_shares.get_resource(contact, resource)
-                #     for d in incoming_shares:
-                #         hash = d.attrib['hash']
-                #         size = d.attrib['size']
-                #         name = d.attrib['name']
-                #         logger.debug('adding %s' % hash)
-                #         contact_shares.add_share(jid=contact, resource=resource, hash=hash, name=name, size=size, files=[])
-                # else:
-                #     logger.debug('No item content')
-                #
-                # if addresses is not None:
-                #     contact_shares.clear_addresses(contact, resource)
-                #     for d in addresses:
-                #         contact_shares.add_address(jid=contact, resource=resource, address=d['address'], port=d['port'])
 
     def on_exit(self):
         logger.debug('sending empty shares')
