@@ -74,11 +74,11 @@ class UserShares(BasePlugin):
         logging.info('publishing %s handles' % len(handle_infos))
 
         for resource in contact_shares.get_user(self.xmpp.boundjid.bare).keys():
-            if contact_shares.get_resource(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)['shares'] != {}:
+            if contact_shares.get_resource(self.xmpp.boundjid.bare, resource)['shares'] != {}:
                 logging.debug('adding resource %s' % resource)
                 resource_stanza = shares_stanza.add_resource(resource)
 
-                shares = contact_shares.get_resource(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)['shares']
+                shares = contact_shares.get_resource(self.xmpp.boundjid.bare, resource)['shares']
                 for share in shares:
                     logging.debug('adding share %s to stanza' % shares[share]['name'])
                     resource_stanza.add_share(shares[share]['hash'], shares[share]['name'], shares[share]['size'])
@@ -86,9 +86,9 @@ class UserShares(BasePlugin):
                 logging.info('adding addresses')
                 # add ipv4 and v6 addresses
                 address_list = \
-                    contact_shares.get_ipv4_addresses(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
+                    contact_shares.get_ipv4_addresses(self.xmpp.boundjid.bare, resource)
                 address_list += \
-                    contact_shares.get_ipv6_addresses(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
+                    contact_shares.get_ipv6_addresses(self.xmpp.boundjid.bare, resource)
 
                 logging.debug('addresslist: %s ' % address_list)
                 for address in address_list:

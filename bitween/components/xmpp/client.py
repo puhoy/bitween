@@ -102,6 +102,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         logger.info('%s' % incoming_shares)
 
         for resource in incoming_shares['resources']:
+            logger.info('processing the following res: %s' % resource)
             logger.info('clearing resource %s of user %s' % (resource['resource'], msg['from']))
             contact_shares.clear(msg['from'], resource['resource'])
 
