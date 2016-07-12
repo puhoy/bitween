@@ -25,7 +25,7 @@ def get_torrents():
 def add_file(file=''):
     logger.info('adding %s to torrents' % file)
     if os.path.exists(file):
-        publish('add_file', file)
+        publish('generate_torrent', file)
         return True
     else:
         logger.error('error: %s does not exist' % file)

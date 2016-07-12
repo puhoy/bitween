@@ -45,11 +45,15 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         self.addresses = Addresses()
         self.addresses.fetch_addresses()
 
+        logger.info('got addresses: %s' % (self.addresses.ip_v4 + self.addresses.ip_v6))
+
         self.api = JsonRpcAPI(api_host, api_port)
         self.api.start()
 
         self.bt_client = BitTorrentClient()
         self.bt_client.start()
+
+        self.addresses.ports.append(self.bt_client.session.listen_port())
 
     def start(self, event):
         """
@@ -69,6 +73,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
 
         self.send_presence()
         self.get_roster()
+
+        self.publish('publish_shares')
 
     def process_queue(self):
         '''
@@ -93,6 +99,7 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         """ handle incoming files """
         incoming_shares = msg['pubsub_event']['items']['item']['shares']['share_items']
         addresses = msg['pubsub_event']['items']['item']['shares']['addresses']
+        print('got addresses: %s' % addresses)
         resource = msg['pubsub_event']['items']['item']['shares']['resource']
 
         logger.debug('got magnetlinks from %s' % msg['from'])

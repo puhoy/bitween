@@ -21,3 +21,13 @@
     </event>
 </message>
 DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <iq to="bitween@xmpp.kwoh.de/athome" type="result" id="130588a4-3e6f-4c86-9572-4060d6a71c6a-7"><pubsub xmlns="http://jabber.org/protocol/pubsub"><publish node="https://xmpp.kwoh.de/protocol/shares"><item id="current" /></publish></pubsub></iq>
+
+
+
+<message to="jan@xmpp.kwoh.de/bitween_sprach" type="headline" from="jan@xmpp.kwoh.de"><event xmlns="http://jabber.org/protocol/pubsub#event">
+    <items node="https://xmpp.kwoh.de/protocol/shares">
+        <item id="current">
+            <shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="bitween_sprach">
+                <share hash="87c7c6a35cb00823ec4dfff3b057306109db0af9" name="debug.log" size="593878" />
+                <address port="55574" address="87.253.171.135" />
+</shares></item></items></event></message>

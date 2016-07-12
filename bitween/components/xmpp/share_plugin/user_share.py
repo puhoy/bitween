@@ -1,6 +1,6 @@
 from sleekxmpp.plugins.base import BasePlugin
 from . import stanza
-from .stanza import UserSharesStanza, ShareItemStanza, AddressStanza
+from . import UserSharesStanza, ShareItemStanza, ResourceStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class UserShares(BasePlugin):
     """
-    XEP-0118: User Tune
+    Share Plugin
     """
 
     name = 'shares'
@@ -30,8 +30,8 @@ class UserShares(BasePlugin):
         pass
 
     def session_bind(self, jid):
+        register_stanza_plugin(UserSharesStanza, ResourceStanza, iterable=True)
         register_stanza_plugin(UserSharesStanza, ShareItemStanza, iterable=True)
-        register_stanza_plugin(UserSharesStanza, AddressStanza, iterable=True)
         self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
 
     def publish_shares(self, handles=None, addresses=None, options=None,
@@ -50,22 +50,27 @@ class UserShares(BasePlugin):
         """
 
         shares = UserSharesStanza()
-        shares['resource'] = self.xmpp.boundjid.resource
+
         logging.info('publishing %s handles' % len(handles))
 
-        if handles:
-            for h in handles:
-                if h.get('hash', False):
-                    logging.info('adding hash %s of file %s' % (h.get('hash'), h.get("name", None)))
-                    shares.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
-                else:
-                    logger.error('NO HASH FOR HANDLE!')
+        logger.error(addresses.ip_v4 + addresses.ip_v6)
+        logger.error(addresses.ports + addresses.nat_ports)
 
+        self.resource_stanzas = []
 
         for addr in addresses.ip_v4 + addresses.ip_v6:
             for port in addresses.ports + addresses.nat_ports:
                 logger.error('adding address: %s:%s' % (addr, port))
-                shares.add_address(addr, port=port)
+                self.resource_stanzas.append(shares.add_resource(self.xmpp.boundjid.resource, addr, port=port))
+
+        if handles:
+            for h in handles:
+                if h.get('hash', False):
+                    for stanza in self.resource_stanzas:
+                        logging.info('adding hash %s of file %s' % (h.get('hash'), h.get("name", None)))
+                        stanza.add_share(hash=h.get('hash'), name=h.get("name", None), size=h.get('total_size', None))
+                else:
+                    logger.error('NO HASH FOR HANDLE!')
 
         return self.xmpp['xep_0163'].publish(shares,
                                              node=UserSharesStanza.namespace,
