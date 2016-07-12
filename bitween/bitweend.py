@@ -1,4 +1,4 @@
-from bitween.log import setup_logging
+from log import setup_logging
 import logging
 import sys
 
@@ -7,9 +7,10 @@ from argparse import ArgumentParser
 import json
 import os
 
-import bitween
-XmppClient = bitween.XmppClient
-config = bitween.config
+from components.xmpp import XmppClient
+from components import config
+
+conf = config.conf
 
 
 if sys.version_info < (3, 0):
@@ -20,7 +21,7 @@ else:
 
 
 def start(api_host, api_port):
-    c = XmppClient(config['xmpp_account']['jid'], config['xmpp_account']['password'], api_host, api_port)
+    c = XmppClient(conf['xmpp_account']['jid'], conf['xmpp_account']['password'], api_host, api_port)
     c.connect()
     c.process()
 
