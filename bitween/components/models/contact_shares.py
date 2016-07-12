@@ -124,9 +124,13 @@ class ContactShares:
         res = self.get_resource(jid, resource)
         res['shares'] = {}
 
-    def clear(self, jid, resource):
-        self.clear_addresses(jid, resource)
-        self.clear_shares(jid, resource)
+    def clear(self, jid, resource=None):
+        jid = str(jid)
+        if resource == None:
+            self.dict[jid] = {}
+        else:
+            self.clear_addresses(jid, resource)
+            self.clear_shares(jid, resource)
 
     def add_share(self, jid, resource, hash, name='', size=0, files=None):
         res = self.get_resource(jid, resource)

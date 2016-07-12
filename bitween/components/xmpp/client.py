@@ -101,6 +101,8 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
         incoming_shares = msg['pubsub_event']['items']['item']['user_shares']
         logger.info('%s' % incoming_shares)
 
+        contact_shares.clear(msg['from'])
+
         for resource in incoming_shares['resources']:
             logger.info('processing the following res: %s' % resource)
             logger.info('clearing resource %s of user %s' % (resource['resource'], msg['from']))
