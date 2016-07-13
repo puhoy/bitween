@@ -12,6 +12,7 @@ else:
     from queue import Empty
 
 topics = {}
+lock = Lock()
 
 def publish(topic, *args, **kwargs):
     """
@@ -28,7 +29,7 @@ def publish(topic, *args, **kwargs):
     if not t['subscribers']:
         logger.error('published to topic %s with no subscribers' % topic)
         return False
-    with Lock():
+    with lock:
         for s in t['subscribers']:
             logger.debug('published message on topic %s: %s %s' % (topic, args, kwargs))
             s._put_message((topic, args, kwargs))
@@ -91,7 +92,7 @@ class Subscriber:
         :return:
         """
         t = _get_topic(topic)
-        with Lock():
+        with lock:
             if self not in t['subscribers']:
                 logger.info('%s subscribed to %s' % (self.name, topic))
                 t['subscribers'].append(self)
@@ -148,7 +149,7 @@ class Subscriber:
             logger.error('error at %s' % self)
 
     def __del__(self):
-        with Lock():
+        with lock:
             if topics:
                 for t in topics:
                     if self in t['subscribers']:

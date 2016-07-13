@@ -1,3 +1,10 @@
+"""
+Democlass for autosubscribing
+
+needed for testing
+"""
+
+
 from .pubsub import Subscriber
 
 class AutoSub(Subscriber):

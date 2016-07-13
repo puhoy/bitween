@@ -1,4 +1,4 @@
-from .pubsub import Subscriber, publish
+from .pubsub import Subscriber, publish, AutoSub
 
 from .models import contact_shares, handles, config, Addresses
 
