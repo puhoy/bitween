@@ -1,33 +1,72 @@
-<message to="bitween@xmpp.kwoh.de/athome" type="headline" from="bitween@xmpp.kwoh.de">
-	<event xmlns="http://jabber.org/protocol/pubsub#event">
-		<items node="https://xmpp.kwoh.de/protocol/shares">
-			<item id="current">
-			<shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="ddum">
-				<share hash="8e1f73226bdb5efcd9b3e9631bab992203dabdd5" name="Release.key" size="1093" />
-			</shares>
-			</item>
-		</items>
-	</event>
-</message>
-<message to="bitween@xmpp.kwoh.de/athome" type="headline" from="bitween@xmpp.kwoh.de">
-    <event xmlns="http://jabber.org/protocol/pubsub#event">
-        <items node="https://xmpp.kwoh.de/protocol/shares">
-            <item id="current">
-                <shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="athome">
-                    <share hash="89854c19917b068b449dce9e1b7696e20fb8d138" name="debug.log" size="1697476" />
-                </shares>
-            </item>
-        </items>
-    </event>
-</message>
-DEBUG:sleekxmpp.xmlstream.xmlstream:RECV: <iq to="bitween@xmpp.kwoh.de/athome" type="result" id="130588a4-3e6f-4c86-9572-4060d6a71c6a-7"><pubsub xmlns="http://jabber.org/protocol/pubsub"><publish node="https://xmpp.kwoh.de/protocol/shares"><item id="current" /></publish></pubsub></iq>
+BT:
+    def __init__(self):
+        [...]
+        self.publish('bt_ready')
+
+    def on_exit(self):
+        [...]
+
+    def run(self):
+        [...]
+        while not self.end:
+            [...]
+
+            elif alert.what() == "torrent_update_alert":
+                self.publish('publish_shares')
+
+            elif alert.what() == "state_update_alert":
+                self.publish('publish_shares')
+
+            elif alert.what() == "file_error_alert":
+                [...]
+                self.publish('publish_shares')
+
+            elif alert.what() == "portmap_alert":
+                [...]
+                self.publish('set_port', alert.external_port)
+
+            elif alert.what() == "metadata_received_alert":
+                [...]
+                self.publish('publish_shares')
+
+    def on_add_peer(self, infohash, peer_address, peer_port):
+        [...]
+
+    def on_add_hash(self, sha_hash, save_path):
+        [...]
+
+    def on_add_torrent(self, torrentfilepath, save_path):
+        [...]
+        self.publish('publish_shares')
+
+    def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
+        [...]
+        self.publish('publish_shares')
+
+    def on_generate_torrent(self, path):
+        [...]
+
+    def on_del_torrent(self, handle):
+        [...]
 
 
+JSONRPC:
+    @jsonrpc.method('Api.exit')
+    def safe_exit():
+        publish('exit')
 
-<message to="jan@xmpp.kwoh.de/bitween_sprach" type="headline" from="jan@xmpp.kwoh.de"><event xmlns="http://jabber.org/protocol/pubsub#event">
-    <items node="https://xmpp.kwoh.de/protocol/shares">
-        <item id="current">
-            <shares xmlns="https://xmpp.kwoh.de/protocol/shares" resource="bitween_sprach">
-                <share hash="87c7c6a35cb00823ec4dfff3b057306109db0af9" name="debug.log" size="593878" />
-                <address port="55574" address="87.253.171.135" />
-</shares></item></items></event></message>
+    @jsonrpc.method('bt.add_torrent_by_hash', mlink='', save_path=None)
+    def add_torrent_by_hash(hash, save_path):
+        logger.info('adding hash %s to torrents' % hash)
+        publish('add_hash', hash, save_path)
+
+XMPP:
+    def start(self, event):
+        self.get_roster()
+        self.publish('publish_shares')
+
+    def on_publish_shares(self):
+
+    def on_shares_publish(msg):
+
+    def on_exit(self):

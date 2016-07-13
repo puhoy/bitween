@@ -19,7 +19,8 @@ basic::
                 (topic, args, kwargs) = s.get()
                 print('%s, %s, %s' % topic, args, kwargs)
 
-    (maybe from another thread and object) post to the topic:
+    # (maybe from another thread and object) post to the topic:
+
     publish('myTopic', 'somestring', val=123)
 
 
@@ -42,4 +43,4 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info('starting %s' % __name__)
 
-from .pubsub import publish, PubSubscriber
+from .pubsub import publish, Subscriber

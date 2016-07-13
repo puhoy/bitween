@@ -12,26 +12,37 @@ else:
     from queue import Empty
 
 topics = {}
-lock = Lock()
-
 
 def publish(topic, *args, **kwargs):
     """
-    publish to a topic.
+    publish arguments to a topic.
+
+    :param topic: topic to publish the message to
+    :type topic: str
+    :param args: unnamed arguments
+    :param kwargs: named arguments
+    :return: False if no Subscribers, else True
     """
     t = _get_topic(topic)
     logger.debug('got subscribers in topic: %s' % t['subscribers'])
     if not t['subscribers']:
         logger.error('published to topic %s with no subscribers' % topic)
         return False
-    with lock:
+    with Lock():
         for s in t['subscribers']:
             logger.debug('published message on topic %s: %s %s' % (topic, args, kwargs))
-            s.put_message((topic, args, kwargs))
+            s._put_message((topic, args, kwargs))
         return True
 
 
 def _get_topic(topic):
+    """
+    get a topic from the topics dictionary
+    will be created new, with no subscribers, if there is none.
+
+    :param topic:
+    :return:
+    """
     t = topics.get(topic, None)
     if not t:
         topics[topic] = _new_topic()
@@ -41,16 +52,26 @@ def _get_topic(topic):
 
 
 def _new_topic():
+    """
+    create an empty dictionary with subscribers. used by _get_topic()
+
+    :return: empty subscribers dict
+    """
     return {
         'subscribers': []
     }
 
 
-class PubSubscriber:
+class Subscriber:
     def __init__(self, name='', autosubscribe=False):
         """
+        Base Class for IPC
 
-        :param name:
+         all Subclasses inherit Queues and basic scheduling functions
+
+         see the __init__.py of this module for example usage.
+
+        :param name: Optional, but used in debugging
         :param autosubscribe: if True, subscribe to all functionnames starting with on_, without on_ ("on_topic()" would subscribe to "topic")
         :return:
         """
@@ -63,8 +84,14 @@ class PubSubscriber:
                 self.subscribe(l.split('on_')[1])
 
     def subscribe(self, topic):
+        """
+        manually subscribe a topic
+
+        :param topic:
+        :return:
+        """
         t = _get_topic(topic)
-        with lock:
+        with Lock():
             if self not in t['subscribers']:
                 logger.info('%s subscribed to %s' % (self.name, topic))
                 t['subscribers'].append(self)
@@ -73,13 +100,33 @@ class PubSubscriber:
                 logger.error('already subscribed to %s' % topic)
                 return False
 
-    def put_message(self, topic, *args, **kwargs):
+    def _put_message(self, topic, *args, **kwargs):
+        """
+        put a Message in the Queue.
+        called by the publish-function
+
+        :param topic:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         self.queue.put(topic, *args, **kwargs)
 
     def has_messages(self):
+        """
+
+        :return: True if Queue not Empty, otherwise False
+        """
         return self.queue.qsize() != 0
 
     def get_message(self, timeout=0.1):
+        """
+        get topic, arguments and names arguments
+
+        :param timeout:
+        :return: topic, args, kwargs
+        :rtype: str, list, dict
+        """
         try:
             (topic, args, kwargs) = self.queue.get(block=True, timeout=timeout)
             return topic, args, kwargs
@@ -101,7 +148,7 @@ class PubSubscriber:
             logger.error('error at %s' % self)
 
     def __del__(self):
-        with lock:
+        with Lock():
             if topics:
                 for t in topics:
                     if self in t['subscribers']:

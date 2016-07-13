@@ -16,7 +16,7 @@ from threading import Thread
 
 import libtorrent as lt
 
-from . import PubSubscriber
+from . import Subscriber
 from ..models import contact_shares
 from . import handles
 
@@ -88,14 +88,14 @@ def utf8_encoded(s, encoding="utf8"):
     return s
 
 
-class BitTorrentClient(Thread, PubSubscriber):
+class BitTorrentClient(Thread, Subscriber):
     """
     Backend for the TorrentSession
     """
 
     def __init__(self):
         Thread.__init__(self)
-        PubSubscriber.__init__(self, autosubscribe=True)
+        Subscriber.__init__(self, autosubscribe=True)
         self.statdb = 'stat.db'
 
         self.session = lt.session()
@@ -286,11 +286,14 @@ class BitTorrentClient(Thread, PubSubscriber):
         # ending - save stuff
         # erase previous torrents first
         self.erase_all_torrents_from_db()
+
         # then trigger saving resume data
         for handle in self.handles:
             handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
+
         # set alert mast to get the right alerts
         self.session.set_alert_mask(lt.alert.category_t.storage_notification)
+
         # wait for everything to save and finish!
         while self.handles:
             # logger.debug(self.handles.list)
@@ -316,35 +319,6 @@ class BitTorrentClient(Thread, PubSubscriber):
         time.sleep(1)
         logger.debug("handles at return: %s" % self.handles)
         return
-
-    def on_add_peer(self, infohash, peer_address, peer_port):
-        """
-        add a peer to an existing torrent which is identified by its magnetlink
-
-        :param magnetlink:
-        :param peer_address:
-        :param peer_port:
-        :return:
-        """
-        # todo: port thing is restructured
-        logger.debug('trying to add peer')
-        # info = handle.torrent_file()
-        # info.name()
-        handle = False
-
-        for h in self.handles:
-            if infohash == '%s' % h.info_hash():
-                logger.debug('hash found')
-                handle = h
-            else:
-                logger.debug("%s is not %s" % (infohash, h.info_hash()))
-
-        if handle:
-            logger.info('adding peer %s to handle %s' % (peer_address, handle.name()))
-            handle.connect_peer((peer_address, peer_port), 0)
-            return True
-        else:
-            return False
 
     def on_add_hash(self, sha_hash, save_path):
         """
@@ -395,12 +369,14 @@ class BitTorrentClient(Thread, PubSubscriber):
         logger.info("adding torrentfile")
         # info = lt.torrent_info(torrentfilepath)
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
-        self.on_add_torrent_by_info(info, save_path)
+        self.add_torrent_by_info(info, save_path)
         self.publish('publish_shares')
 
-    def on_add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
+    def add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
         needed to resume torrents by the saved resume_data
+
+        also used by on_generate_torrent
 
         :param torrentinfo: the torrentinfo
         :param save_path: path to save
@@ -448,21 +424,24 @@ class BitTorrentClient(Thread, PubSubscriber):
         torrent = t.generate()
         logger.debug('generated')
         info = lt.torrent_info(torrent)
-        self.on_add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
+        self.add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
             path,
             os.pardir)))
 
-    def on_del_torrent(self, handle):
+    def on_del_torrent(self, hash):
         """
-        trigger creation of save_resume_data_alert to save the resume data for torrent
-        resume data can be given to save method to store to sqlite (see "while handles" loop in run method)
+        delete a torrent from the current session.
 
         :param handle:
-        :return:
+        :return: True, or False if not found
         """
 
-        # creates save_resume_data_alert
-        handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
+        for handle in self.handles:
+            if handle.info_hash() == hash:
+                self.session.remove_torrent(handle)
+                self.handles.remove(handle)
+                return True
+        return False
 
     def save(self, handle, resume_data):
         """
@@ -507,7 +486,7 @@ class BitTorrentClient(Thread, PubSubscriber):
             fastresumedata = bytes(t[2])
             save_path = t[3]
             torrentinfo = lt.torrent_info(entry)
-            self.on_add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
+            self.add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
         db.close()
         pass
 

@@ -32,7 +32,13 @@ def add_path(path=''):
         return False
 
 
-@jsonrpc.method('bt.add_torrent_by_hash', mlink='', save_path=None)
+@jsonrpc.method('bt.add_torrent_by_hash', hash='', save_path=None)
 def add_torrent_by_hash(hash, save_path):
     logger.info('adding hash %s to torrents' % hash)
     publish('add_hash', hash, save_path)
+
+
+@jsonrpc.method('bt.del_torrent', hash='')
+def del_torrent(hash):
+    logger.info('deleting torrent %s' % hash)
+    publish('del_torrent', hash)

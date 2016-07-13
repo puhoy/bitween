@@ -1,6 +1,6 @@
 import sys
 import sleekxmpp
-from .. import PubSubscriber
+from .. import Subscriber
 
 from .. import contact_shares
 from .. import handles
@@ -19,9 +19,9 @@ def create_torrent_client():
     return ts
 
 
-class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
+class XmppClient(sleekxmpp.ClientXMPP, Subscriber):
     def __init__(self, jid, password, api_host='localhost', api_port=8080):
-        PubSubscriber.__init__(self, autosubscribe=True)
+        Subscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
         self.add_event_handler("session_start", self.start)
@@ -115,6 +115,9 @@ class XmppClient(sleekxmpp.ClientXMPP, PubSubscriber):
             for address in resource['ip_addresses']:
                 contact_shares.add_address(msg['from'], resource['resource'], address['address'], address['port'])
 
+    def on_set_port(self, port):
+        # todo
+        pass
 
     def on_exit(self):
         logger.debug('sending empty shares')

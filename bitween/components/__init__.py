@@ -1,4 +1,4 @@
-from .pubsub import PubSubscriber, publish
+from .pubsub import Subscriber, publish
 
 from .models import contact_shares, handles, config, Addresses
 
