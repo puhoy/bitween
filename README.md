@@ -19,7 +19,7 @@ clone to where ever you like::
 install dependencies (virtualenv)::
 
     sudo apt-get install python-libtorrent
-    virtualenv --system-site-packages env
+    virtualenv --system-site-packages -p /usr/bin/python2.7 env
     source env/bin/activate
     pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
 
