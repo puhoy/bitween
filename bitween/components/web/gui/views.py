@@ -1,6 +1,3 @@
-__author__ = 'meatpuppet'
-# -*- coding: utf-8 -*-
-
 from . import gui
 from flask import render_template, redirect, abort, url_for, request, flash, make_response, Markup, current_app, flash
 
