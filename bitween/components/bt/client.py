@@ -375,12 +375,16 @@ class BitTorrentClient(Thread, Subscriber):
         :param handle:
         :return: True, or False if not found
         """
-
         for handle in self.handles:
-            if handle.info_hash() == hash:
+            if str(handle.info_hash()) == utf8_encoded(hash):
                 self.session.remove_torrent(handle)
                 self.handles.remove(handle)
+                logger.info('removing handle for %s' % hash)
+                self.publish('publish_shares')
                 return True
+            # else:
+            #     print("%s != %s" % (handle.info_hash(), utf8_encoded(hash)))
+            #     print("%s != %s" % (type(handle.info_hash()), type(utf8_encoded(hash))))
         return False
 
     def save(self, handle, resume_data):

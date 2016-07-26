@@ -10,7 +10,7 @@ from . import logger
 from . import share_plugin
 
 from .. import BitTorrentClient
-from .. import JsonRpcAPI
+from .. import Web
 
 
 def create_torrent_client():
@@ -44,7 +44,7 @@ class XmppClient(sleekxmpp.ClientXMPP, Subscriber):
 
         logger.info('got addresses: %s' % (self.addresses.ip_v4 + self.addresses.ip_v6))
 
-        self.api = JsonRpcAPI(api_host, api_port)
+        self.api = Web(api_host, api_port)
         self.api.start()
 
         self.bt_client = BitTorrentClient()

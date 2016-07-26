@@ -1,21 +1,12 @@
 from log import setup_logging
 import logging
-import sys
 
 from argparse import ArgumentParser
-import json
-import os
 
 from components.xmpp import XmppClient
 from components import config
 
 conf = config.conf
-
-if sys.version_info < (3, 0):
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-else:
-    raw_input = input
 
 
 def start(api_host, api_port):

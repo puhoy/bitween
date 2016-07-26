@@ -2,9 +2,9 @@
 XMPP related functions of the JSONRPCAPI
 """
 
-from . import logger
-from . import jsonrpc
-from .. import contact_shares
+from components.web import logger
+from .. import jsonrpc
+from components import contact_shares
 from flask import jsonify
 
 
@@ -42,7 +42,7 @@ def get_all_hashes():
     return jsonify({'hashes': contact_shares.hashes})
 
 @jsonrpc.method('xmpp.get_shares')
-def get_all_hashes():
+def get_all_shares():
     """
     return a list of all collected shares
 

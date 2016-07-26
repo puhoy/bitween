@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    addTorrent = function (hash) {
+        $.ajax({
+            url: "/api",
+            type: "POST",
+            data: JSON.stringify ({
+                "jsonrpc": "2.0",
+                "method": "bt.add_torrent_by_hash",
+                "id": "123",
+                "params": {
+                    'hash': hash,
+                    "save_path": 'share'
+                }
+            }),
+            dataType: "application/json",
+            success: function (result) {
+                alert("added hash!");
+            }
+        });
+    };
+</script>
+
+{% endblock scripts %}
+
+{% block page_content %}
+{{ super() }}
+
+<h1>search</h1>
+
+{% if hashes %}
+
+<ul>
+    {% for hash, values in hashes.iteritems() %}
+    <li>{{values['name']}}
+        <button type="button" onClick="addTorrent('{{hash}}')">add</button>
+        <ul>
+            <li>hash: {{hash}}</li>
+            <li>size: {{values['size']}}</li>
+            <li>contacts: {{values['contacts']}}</li>
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+
+no torrents. maybe you should offer a few.
+
+{% endif %}
+
+{% endblock page_content %}}

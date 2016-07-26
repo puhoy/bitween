@@ -2,15 +2,15 @@
 BitTorrent related functions of the JSONRPCAPI
 """
 
-from . import logger
+from .. import logger
 
 import os
 
 from flask import jsonify
 
-from .. import publish
-from . import jsonrpc
-from .. import handles
+from components import publish
+from .. import jsonrpc
+from components import handles
 
 
 @jsonrpc.method('bt.get_torrents')

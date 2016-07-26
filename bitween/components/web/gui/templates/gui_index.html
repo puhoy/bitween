@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    delTorrent = function (hash) {
+        $.ajax({
+            url: "/api",
+            type: "POST",
+            data: JSON.stringify ({
+                "jsonrpc": "2.0",
+                "method": 'bt.del_torrent',
+                "id": "123",
+                "params": {
+                    'hash': hash
+                }
+            }),
+            dataType: "application/json",
+            success: function (result) {
+                alert("deleting torrent with hash " + hash);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+    };
+</script>
+
+{% endblock scripts %}
+{% block page_content %}
+    {{ super() }}
+
+<h1>Your Torrents</h1>
+
+{% if torrents %}
+
+<ul>
+    {% for torrent in torrents %}
+    <li>{{torrent['name']}}
+        <button type="button" onClick='delTorrent("{{ torrent['hash'] }}")'>delete</button>
+        <ul>
+            <li>hash: {{torrent['hash']}}</li>
+            <li>size: {{torrent['total_size']}}</li>
+            <li>files: {{torrent['files']}}</li>
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+
+{% else %}
+
+no torrents. maybe you should add a few.
+
+{% endif %}
+
+
+
+{% endblock page_content %}}

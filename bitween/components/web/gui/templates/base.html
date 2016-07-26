@@ -1,0 +1,44 @@
+{% extends "bootstrap/base.html" %}
+
+{%- block head %}
+    {{  super() }}
+{% endblock head %}
+
+{% block title %}bitween{% endblock %}
+
+{% block scripts %}
+        {{ super() }}
+        {{ moment.include_moment() }}
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet"
+      href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+{% endblock %}
+
+{% block content %}
+    <div class = "container">
+        <div class="col-md-3">
+            <h2>bitween</h2>
+            <br>
+            <br>
+            <h4><a href="/">your torrents</a></h4>
+            <h4><a href="search">search</a></h4>
+        </div>
+        <div class="col-md-6">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close"
+                            data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            {% block page_content %}
+                {# page content goes here #}
+            {% endblock %}
+
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+{% endblock %}
