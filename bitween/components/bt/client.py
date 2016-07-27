@@ -260,6 +260,18 @@ class BitTorrentClient(Thread, Subscriber):
         logger.debug("handles at return: %s" % self.handles)
         return
 
+    def on_recheck_handles(self):
+        for handle in self.handles:
+            addr_tuples = contact_shares.hashes.get(str(handle.info_hash()), [])
+            for addr_tuple in addr_tuples:
+                try:
+                    if addr_tuple not in [peer_info.ip for peer_info in handle.get_peer_info()]:
+                        logger.info('connecting to %s' % addr_tuple[0])
+                        handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
+                except Exception as e:
+                    logger.error('recheck_handles: cant connect to %s:%s: %s' %
+                                 (addr_tuple[0], addr_tuple[1], e))
+
     def on_add_hash(self, sha_hash, save_path):
         """
         add a hash to the torrent session
@@ -382,9 +394,9 @@ class BitTorrentClient(Thread, Subscriber):
                 logger.info('removing handle for %s' % hash)
                 self.publish('publish_shares')
                 return True
-            # else:
-            #     print("%s != %s" % (handle.info_hash(), utf8_encoded(hash)))
-            #     print("%s != %s" % (type(handle.info_hash()), type(utf8_encoded(hash))))
+                # else:
+                #     print("%s != %s" % (handle.info_hash(), utf8_encoded(hash)))
+                #     print("%s != %s" % (type(handle.info_hash()), type(utf8_encoded(hash))))
         return False
 
     def save(self, handle, resume_data):

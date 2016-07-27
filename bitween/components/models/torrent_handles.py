@@ -50,6 +50,8 @@ class Handles:
                 h['name'] = info.name()
                 h['hash'] = u'%s' % handle.info_hash()
 
+                h['done'] = handle.status().total_done
+
                 try:
                     files = info.files()  # the filestore object
                 except:

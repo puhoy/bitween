@@ -12,6 +12,7 @@ from . import share_plugin
 from .. import BitTorrentClient
 from .. import Web
 
+from .. import publish
 
 def create_torrent_client():
     ts = BitTorrentClient()
@@ -110,6 +111,8 @@ class XmppClient(sleekxmpp.ClientXMPP, Subscriber):
 
             for address in resource['ip_addresses']:
                 contact_shares.add_address(msg['from'], resource['resource'], address['address'], address['port'])
+
+        publish('recheck_handles')
 
     def on_set_port(self, port):
         # todo
