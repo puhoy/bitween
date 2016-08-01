@@ -1,10 +1,10 @@
-from log import setup_logging
+from bitween.components.log import setup_logging
 import logging
 
 from argparse import ArgumentParser
 
-from components.xmpp import XmppClient
-from components import config
+from bitween.components.xmpp import XmppClient
+from bitween.components import config
 
 conf = config.conf
 

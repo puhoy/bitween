@@ -3,7 +3,7 @@ from .. import jsonrpc
 from .. import publish
 
 from flask import request
-from components import contact_shares
+from bitween.components import contact_shares
 
 
 

@@ -1,0 +1,13 @@
+digraph "classes_xmpp" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{BaseXMPP|\l|\l}", shape="record"];
+
+"1" [label="{ClientXMPP|\l|get_roster()\lconnect()}", shape="record"];
+
+"2" [label="{Subscriber|queue : Queue\lname : str\l|has_messages()\lget_message()\lpublish()\lsubscribe()\l}", shape="record"];
+"3" [label="{XmppClient|api : Web\laddresses : Addresses\lbt_client : BitTorrentClient\lname\l|on_publish_shares()\lprocess_queue()\lon_set_port()\lstart()\lon_shares_publish()\lon_exit()\l}", shape="record"];
+"1" -> "0" [arrowhead="empty", arrowtail="none"];
+"3" -> "1" [arrowhead="empty", arrowtail="none"];
+"3" -> "2" [arrowhead="empty", arrowtail="none"];
+}

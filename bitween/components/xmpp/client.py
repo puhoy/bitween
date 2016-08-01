@@ -20,7 +20,7 @@ def create_torrent_client():
     return ts
 
 
-class XmppClient(sleekxmpp.ClientXMPP, Subscriber):
+class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
     def __init__(self, jid, password, api_host='localhost', api_port=8080):
         Subscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)

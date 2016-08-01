@@ -2,9 +2,9 @@
 XMPP related functions of the JSONRPCAPI
 """
 
-from components.web import logger
+from bitween.components.web import logger
 from .. import jsonrpc
-from components import contact_shares
+from bitween.components import contact_shares
 from flask import jsonify
 
 

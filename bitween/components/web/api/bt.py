@@ -8,9 +8,9 @@ import os
 
 from flask import jsonify
 
-from components import publish
+from bitween.components import publish
 from .. import jsonrpc
-from components import handles
+from bitween.components import handles
 
 
 @jsonrpc.method('bt.get_torrents')

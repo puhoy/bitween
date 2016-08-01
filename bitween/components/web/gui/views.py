@@ -1,9 +1,9 @@
 from . import gui
 from flask import render_template, redirect, abort, url_for, request, flash, make_response, Markup, current_app, flash
 
-from components import handles
+from bitween.components import handles
 
-from components import contact_shares
+from bitween.components import contact_shares
 
 @gui.route('/', methods=['GET', 'POST'])
 def index():

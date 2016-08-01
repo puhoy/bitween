@@ -44,4 +44,4 @@ logger = logging.getLogger(__name__)
 logger.info('starting %s' % __name__)
 
 from .pubsub import publish, Subscriber
-from autosubscriber import AutoSub
+from .autosubscriber import AutoSub
