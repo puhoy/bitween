@@ -19,16 +19,16 @@ clone to where ever you like::
 
 install dependencies (virtualenv)::
 
-    sudo apt-get install python-libtorrent
-    virtualenv --system-site-packages env
+    cd bitween
+    sudo apt-get install python-libtorrent python-dev
+    virtualenv --system-site-packages -p /usr/bin/python2.7 env
     source env/bin/activate
-    pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+    pip install -r requirements.txt
 
 or install dependencies to system::
 
-    sudo apt-get install python-libtorrent
-    sudo pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
-
+    sudo apt-get install python-libtorrent python-dev
+    sudo pip install -r requirements.txt
 
 configuring
 -----------

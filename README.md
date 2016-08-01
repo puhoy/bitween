@@ -14,19 +14,20 @@ tested on python2,7, could work on python3
 
 clone to where ever you like::
 
-    git clone git@github.com:puhoy/bitween.git
+    git clone https://github.com/puhoy/bitween.git
 
 install dependencies (virtualenv)::
 
-    sudo apt-get install python-libtorrent
+    cd bitween
+    sudo apt-get install python-libtorrent python-dev
     virtualenv --system-site-packages -p /usr/bin/python2.7 env
     source env/bin/activate
-    pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+    pip install -r requirements.txt
 
 or install dependencies to system::
 
-    sudo apt-get install python-libtorrent
-    sudo pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize
+    sudo apt-get install python-libtorrent python-dev
+    sudo pip install -r requirements.txt
 
 
 ## configuring

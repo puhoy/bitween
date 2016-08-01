@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 import humanize
 import requests
 
-from components.log import setup_logging
+from bitween.log import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

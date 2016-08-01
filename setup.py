@@ -1,5 +1,13 @@
 from setuptools import setup, find_packages
 
+from pip.req import parse_requirements
+
+# parse_requirements() returns generator of pip.req.InstallRequirement objects
+install_reqs = parse_requirements("requirements.txt", session=False)
+
+reqs = [str(ir.req) for ir in install_reqs]
+
+
 with open('README.md') as f:
     readme = f.read()
 
@@ -22,4 +30,5 @@ setup(
             'bitweenc=bitween.bitweenc:main'
         ]
     },
+    install_requires=reqs
 )
