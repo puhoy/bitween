@@ -26,14 +26,16 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
         self.add_event_handler("session_start", self.start)
-        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
-        self.add_event_handler('shares_publish', self.on_shares_publish)
 
         self.register_plugin('xep_0030')  # service discovery
         self.register_plugin('xep_0115')  # entity caps
         self.register_plugin('xep_0128')  # service discovery extensions
         self.register_plugin('xep_0163')  # pep
+
         self.register_plugin('shares', module=share_plugin)
+        self.add_event_handler('shares_publish', self.on_shares_publish)
+
+        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
 
         # self.auto_authorize = True
         # self.auto_subscribe = True
