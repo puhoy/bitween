@@ -9,6 +9,7 @@ this file holds the class for the bittorrent client
 
 import logging
 import os
+from os.path import expanduser
 import sqlite3
 import time
 import sys
@@ -36,7 +37,9 @@ class BitTorrentClient(Thread, Subscriber):
     def __init__(self):
         Thread.__init__(self)
         Subscriber.__init__(self, autosubscribe=True)
-        self.statdb = 'stat.db'
+
+        self.statdb = os.path.join(expanduser("~"), '.bitween.db')
+        self.setup_db()
 
         self.session = lt.session()
 
@@ -66,7 +69,14 @@ class BitTorrentClient(Thread, Subscriber):
 
         self.setup_settings()
 
-        # self.session.listen_on(8000, 8020)
+        if conf.get('bt', False):
+            if conf['bt'].get('ports', False):
+                ports = conf['bt'].get('ports')
+                try:
+                    self.session.listen_on(ports[0], ports[1])
+                except Exception as e:
+                    logger.error('could not set ports for BT: %s' % e)
+
 
         # self.session.start_dht()
         # self.session.start_lsd()
@@ -79,10 +89,11 @@ class BitTorrentClient(Thread, Subscriber):
         else:
             self.session.stop_natpmp()
 
-        # self.session.stop_dht()
+        self.session.stop_dht()
         # self.session.stop_lsd()
 
-        self.setup_db()
+        self.resume()  # load torrents from db
+
         self.name = 'bt'
         self.publish('bt_ready')
 
@@ -162,6 +173,54 @@ class BitTorrentClient(Thread, Subscriber):
             except Exception as e:
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
+    def handle_alert(self, alert):
+        #   http://www.libtorrent.org/reference-Alerts.html
+        if (alert.what() == "save_resume_data_alert") \
+                or (alert.what() == "save_resume_data_failed_alert"):
+            handle = alert.handle
+
+        elif alert.what() == "torrent_update_alert":
+            self.publish('publish_shares')
+        elif alert.what() == "state_update_alert":
+            self.publish('publish_shares')
+        elif alert.what() == "file_error_alert":
+            logger.error("FILE ERROR: %s" % alert.error)
+            self.session.remove_torrent(alert.handle)
+            self.handles.remove(alert.handle)
+            self.publish('publish_shares')
+        elif (alert.what() == "stats_alert"):
+            pass
+        elif (alert.what() == "listen_failed_alert"):
+            logger.error('failed to listen on interface %s: %s' % (alert.listen_interface(), alert.message()))
+        # elif alert.what() == "external_ip_alert":  # todo
+        #    ip = alert.external_address
+        #    logger.info('got our ip: %s' % ip)
+        #    self.publish('set_ip_address', ip)  # todo
+        elif alert.what() == "portmap_alert":
+            # http://www.rasterbar.com/products/libtorrent/manual.html#portmap-alert
+            # This alert is generated when a NAT router was successfully found and a port was successfully mapped on it. On a NAT:ed network with a NAT-PMP capable router, this is typically generated once when mapping the TCP port and, if DHT is enabled, when the UDP port is mapped.
+            self.publish('set_port', alert.external_port)
+        elif alert.what() == "metadata_received_alert":
+            # send shares when we have enough data to tell someone about it
+            self.publish('publish_shares')
+        elif alert.what() == "portmap_error_alert":
+            logger.error('portmap error: %s' % alert.error)
+
+        elif (alert.what() == "save_resume_data_alert"):
+            handle = alert.handle
+            self.save(handle, alert.resume_data)
+            logger.debug("removing %s at %s" % (handle.name(), handle))
+            self.session.remove_torrent(handle)
+            # print(self.session.wait_for_alert(1000))
+            self.handles.remove(handle)
+        elif (alert.what() == "save_resume_data_failed_alert"):
+            handle = alert.handle
+            logger.debug("removing %s" % handle.name())
+            self.session.remove_torrent(handle)
+            self.handles.remove(handle)
+        else:
+            logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
+
     def run(self):
         """
         the run method of the thread.
@@ -172,54 +231,13 @@ class BitTorrentClient(Thread, Subscriber):
         when every handle is deleted (after saving each resume_data), the session will be saved;
         were done and the thread will exit.
         """
-        # self.statusbar.emit(self.status)
-        # self.output_queue.put({'status': self.status})
-        # self.setup_blocklist()
-        self.resume()
 
-        """
-        print("settings:")
-        for attr, value in self.session.get_settings().items():
-            print("%s: %s" % (attr, value))
-        """
 
-        logger.info("lt läuft...")
+        logger.debug("BT running")
         while not self.end:
-            # neue events abarbeiten
             self.handle_queue()
-            #   http://www.libtorrent.org/reference-Alerts.html
             for alert in self.session.pop_alerts():
-                if (alert.what() == "save_resume_data_alert") \
-                        or (alert.what() == "save_resume_data_failed_alert"):
-                    handle = alert.handle
-                elif alert.what() == "torrent_update_alert":
-                    self.publish('publish_shares')
-                elif alert.what() == "state_update_alert":
-                    self.publish('publish_shares')
-                elif alert.what() == "file_error_alert":
-                    logger.error("FILE ERROR: %s" % alert.error)
-                    self.session.remove_torrent(handle)
-                    self.handles.remove(handle)
-                    self.publish('publish_shares')
-                elif (alert.what() == "stats_alert"):
-                    pass
-                elif (alert.what() == "listen_failed_alert"):
-                    logger.error('failed to listen on interface %s: %s' % (alert.listen_interface(), alert.message()))
-                # elif alert.what() == "external_ip_alert":  # todo
-                #    ip = alert.external_address
-                #    logger.info('got our ip: %s' % ip)
-                #    self.publish('set_ip_address', ip)  # todo
-                elif alert.what() == "portmap_alert":
-                    # http://www.rasterbar.com/products/libtorrent/manual.html#portmap-alert
-                    # This alert is generated when a NAT router was successfully found and a port was successfully mapped on it. On a NAT:ed network with a NAT-PMP capable router, this is typically generated once when mapping the TCP port and, if DHT is enabled, when the UDP port is mapped.
-                    self.publish('set_port', alert.external_port)
-                elif alert.what() == "metadata_received_alert":
-                    # send shares when we have enough data to tell someone about it
-                    self.publish('publish_shares')
-                elif alert.what() == "portmap_error_alert":
-                    logger.error('portmap error: %s' % alert.error)
-                else:
-                    logging.debug('alert: %s - %s' % (alert.what(), alert.message()))
+                self.handle_alert(alert)
             time.sleep(1)
 
         logger.debug("ending")
@@ -239,23 +257,7 @@ class BitTorrentClient(Thread, Subscriber):
             # logger.debug(self.handles.list)
             for alert in self.session.pop_alerts():
                 # logger.debug("- %s %s" % (alert.what(), alert.message()))
-                if (alert.what() == "save_resume_data_alert"):
-                    handle = alert.handle
-                    self.save(handle, alert.resume_data)
-                    logger.debug("removing %s at %s" % (handle.name(), handle))
-                    self.session.remove_torrent(handle)
-                    # print(self.session.wait_for_alert(1000))
-                    self.handles.remove(handle)
-                elif (alert.what() == "save_resume_data_failed_alert"):
-                    handle = alert.handle
-                    logger.debug("removing %s" % handle.name())
-                    self.session.remove_torrent(handle)
-                    self.handles.remove(handle)
-                elif (alert.what() == "stats_alert"):
-                    pass
-                else:
-                    logger.info('got %s: %s' % (alert.what(), alert.message()))
-
+                self.handle_alert(alert)
         time.sleep(1)
         logger.debug("handles at return: %s" % self.handles)
         return
@@ -290,13 +292,12 @@ class BitTorrentClient(Thread, Subscriber):
             'save_path': save_path,
             'duplicate_is_error': True
         }
-        link = mlink
         logger.debug('adding new handly by magnetlink')
-        handle = lt.add_magnet_uri(self.session, utf8_encoded(link), params)
+        handle = lt.add_magnet_uri(self.session, utf8_encoded(mlink), params)
         self.handles.append(handle)
+
         logger.debug('adding peers to handle...')
         addr_tuples = contact_shares.hashes.get(sha_hash, [])
-
         if not addr_tuples:
             logger.error('no addresses for %s' % sha_hash)
             return None
@@ -310,6 +311,7 @@ class BitTorrentClient(Thread, Subscriber):
                 logger.error('cant connect to %s:%s: %s' %
                              (addr_tuple[0], addr_tuple[1], e))
 
+    '''
     def on_add_torrent(self, torrentfilepath, save_path):
         """
         creates a handle for a torrentfile and adds it to the session
@@ -323,8 +325,9 @@ class BitTorrentClient(Thread, Subscriber):
         info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
         self.add_torrent_by_info(info, save_path)
         self.publish('publish_shares')
+    '''
 
-    def add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
+    def _add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """
         needed to resume torrents by the saved resume_data
 
@@ -376,7 +379,7 @@ class BitTorrentClient(Thread, Subscriber):
         torrent = t.generate()
         logger.debug('generated')
         info = lt.torrent_info(torrent)
-        self.add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
+        self._add_torrent_by_info(info, save_path=os.path.abspath(os.path.join(
             path,
             os.pardir)))
 
@@ -442,7 +445,7 @@ class BitTorrentClient(Thread, Subscriber):
             fastresumedata = bytes(t[2])
             save_path = t[3]
             torrentinfo = lt.torrent_info(entry)
-            self.add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
+            self._add_torrent_by_info(torrentinfo, save_path=save_path, resumedata=fastresumedata)
         db.close()
         pass
 

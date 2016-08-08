@@ -8,6 +8,9 @@
   "enable_web_api": true,
   "enable_ipv4": true,
   "enable_ipv6": true,
-  "enable_upnp": true,
-  "enable_natpmp": true
+  "bt": {
+    "enable_upnp": true,
+    "enable_natpmp": true,
+    "ports": [8000, 8020]
+  }
 }
