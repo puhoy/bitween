@@ -12,7 +12,7 @@ from . import share_plugin
 from .. import BitTorrentClient
 from .. import Web
 
-from .. import publish
+from . import publish
 
 def create_torrent_client():
     ts = BitTorrentClient()
@@ -33,7 +33,6 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         self.register_plugin('xep_0163')  # pep
 
         self.register_plugin('shares', module=share_plugin)
-        self.add_event_handler('shares_publish', self.on_shares_publish)
 
         self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
 
@@ -94,27 +93,6 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         logger.debug('publishing shares')
         self['shares'].publish_shares(handles.get_shares(), self.addresses)
 
-    @staticmethod
-    def on_shares_publish(msg):
-        """ handle incoming files """
-        incoming_shares = msg['pubsub_event']['items']['item']['user_shares']
-        logger.info('%s' % incoming_shares)
-
-        contact_shares.clear(msg['from'])
-
-        for resource in incoming_shares['resources']:
-            logger.info('processing the following res: %s' % resource)
-            logger.info('clearing resource %s of user %s' % (resource['resource'], msg['from']))
-            contact_shares.clear(msg['from'], resource['resource'])
-
-            for item in resource['share_items']:
-                logger.info('adding share %s to resource %s' % (item['name'], resource['resource']))
-                contact_shares.add_share(msg['from'], resource['resource'], item['hash'], item['name'], item['size'])
-
-            for address in resource['ip_addresses']:
-                contact_shares.add_address(msg['from'], resource['resource'], address['address'], address['port'])
-
-        publish('recheck_handles')
 
     def on_set_port(self, port):
         # todo

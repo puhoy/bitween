@@ -1,11 +1,12 @@
 from sleekxmpp.plugins.base import BasePlugin
-from . import stanza
 from . import UserSharesStanza, ShareItemStanza, ResourceStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
 
 from .. import Addresses
 from .. import contact_shares
+
+from .. import publish
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,6 @@ class UserShares(BasePlugin):
     name = 'shares'
     description = 'UserShares'
     dependencies = set(['xep_0163'])
-    stanza = stanza
 
     def plugin_end(self):
         """
@@ -30,11 +30,12 @@ class UserShares(BasePlugin):
         self.xmpp['xep_0163'].remove_interest(UserShares.namespace)
         pass
 
-    def session_bind(self, jid):
+    def plugin_init(self):
         register_stanza_plugin(UserSharesStanza, ResourceStanza, iterable=True)
         register_stanza_plugin(ResourceStanza, ShareItemStanza, iterable=True)
         register_stanza_plugin(ResourceStanza, AddressStanza, iterable=True)
         self.xmpp['xep_0163'].register_pep('shares', UserSharesStanza)
+        self.xmpp.add_event_handler('shares_publish', self.on_shares_publish)
 
     def _update_own_shares(self, handle_infos, addresses):
         # write shares to contact_shares
@@ -103,6 +104,28 @@ class UserShares(BasePlugin):
                                              block=block,
                                              callback=callback,
                                              timeout=timeout)
+    @staticmethod
+    def on_shares_publish(msg):
+        """ handle incoming files """
+        incoming_shares = msg['pubsub_event']['items']['item']['user_shares']
+        logger.info('%s' % incoming_shares)
+
+        contact_shares.clear(msg['from'])
+
+        for resource in incoming_shares['resources']:
+            logger.info('processing the following res: %s' % resource)
+            logger.info('clearing resource %s of user %s' % (resource['resource'], msg['from']))
+            contact_shares.clear(msg['from'], resource['resource'])
+
+            for item in resource['share_items']:
+                logger.info('adding share %s to resource %s' % (item['name'], resource['resource']))
+                contact_shares.add_share(msg['from'], resource['resource'], item['hash'], item['name'], item['size'])
+
+            for address in resource['ip_addresses']:
+                contact_shares.add_address(msg['from'], resource['resource'], address['address'], address['port'])
+
+        publish('recheck_handles')
+
 
     def stop(self, ifrom=None, block=True, callback=None, timeout=None):
         """
