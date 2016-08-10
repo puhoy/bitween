@@ -1,9 +1,0 @@
-digraph "packages_bt" {
-charset="utf-8"
-rankdir=BT
-"0" [label="bitween.components.bt", shape="box"];
-"1" [label="bitween.components.bt.client", shape="box"];
-"2" [label="bitween.components.bt.helpers", shape="box"];
-"0" -> "1" [arrowhead="open", arrowtail="none"];
-"1" -> "2" [arrowhead="open", arrowtail="none"];
-}
