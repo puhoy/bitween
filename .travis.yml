@@ -21,7 +21,7 @@ services:
 
 before_install:
  - sudo apt-get update
- - sudo apt-get -o Dpkg::Options::="--force-confdef"  -y --force-yes install docker-engine python-libtorrent
+ - sudo apt-get -o Dpkg::Options::="--force-confdef"  -y --force-yes install python-libtorrent
  #- docker --version
  #- curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
  #- chmod +x docker-compose
