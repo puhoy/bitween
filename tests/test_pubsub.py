@@ -7,7 +7,7 @@ import imp
 from bitween import components
 
 
-class BasicTestSuite(unittest.TestCase):
+class PubsubTestSuite(unittest.TestCase):
     """Basic test cases."""
 
     def test_publish_empty_subscribers(self):

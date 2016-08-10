@@ -1,0 +1,11 @@
+digraph "classes_bt" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{BitTorrentClient|end : bool\lhandles\lname : str\lsession\lstatdb : str\l|add_torrent_by_info()\lerase_all_torrents_from_db()\lhandle_queue()\lon_add_hash()\lon_add_torrent()\lon_del_torrent()\lon_exit()\lon_generate_torrent()\lon_recheck_handles()\lresume()\lrun()\lsafe_shutdown()\lsave()\lsetup_db()\lsetup_settings()\l}", shape="record"];
+"1" [label="{Handles|handles : list\l|append()\lget_shares()\lremove()\l}", shape="record"];
+"3" [label="{Subscriber|name : str\lqueue\l|get_message()\lhas_messages()\lpublish()\lsubscribe()\l}", shape="record"];
+"4" [label="{Thread|\l|\l}", shape="record"];
+"0" -> "3" [arrowhead="empty", arrowtail="none"];
+"0" -> "4" [arrowhead="empty", arrowtail="none"];
+"1" -> "0" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="handles", style="solid"];
+}

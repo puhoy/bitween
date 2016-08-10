@@ -1,0 +1,16 @@
+digraph "packages_web" {
+charset="utf-8"
+rankdir=BT
+"0" [label="bitween.components.web", shape="box"];
+"1" [label="bitween.components.web.api", shape="box"];
+"2" [label="bitween.components.web.api.bt", shape="box"];
+"3" [label="bitween.components.web.api.xmpp", shape="box"];
+"4" [label="bitween.components.web.gui", shape="box"];
+"5" [label="bitween.components.web.gui.errors", shape="box"];
+"6" [label="bitween.components.web.gui.views", shape="box"];
+"0" -> "1" [arrowhead="open", arrowtail="none"];
+"0" -> "2" [arrowhead="open", arrowtail="none"];
+"0" -> "3" [arrowhead="open", arrowtail="none"];
+"0" -> "4" [arrowhead="open", arrowtail="none"];
+"3" -> "0" [arrowhead="open", arrowtail="none"];
+}

@@ -1,0 +1,15 @@
+digraph "packages_share_stanza" {
+charset="utf-8"
+rankdir=BT
+"0" [label="bitween.components.xmpp.share_plugin", shape="box"];
+"1" [label="bitween.components.xmpp.share_plugin.address_stanza", shape="box"];
+"2" [label="bitween.components.xmpp.share_plugin.resource_stanza", shape="box"];
+"3" [label="bitween.components.xmpp.share_plugin.share_item_stanza", shape="box"];
+"4" [label="bitween.components.xmpp.share_plugin.stanza", shape="box"];
+"5" [label="bitween.components.xmpp.share_plugin.user_share", shape="box"];
+"0" -> "1" [arrowhead="open", arrowtail="none"];
+"0" -> "2" [arrowhead="open", arrowtail="none"];
+"0" -> "3" [arrowhead="open", arrowtail="none"];
+"0" -> "4" [arrowhead="open", arrowtail="none"];
+"0" -> "5" [arrowhead="open", arrowtail="none"];
+}

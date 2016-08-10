@@ -1,0 +1,7 @@
+digraph "classes_web" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{Thread|daemon\lis_alive\lname\l|daemon()\lgetName()\lident()\lisAlive()\lisDaemon()\ljoin()\lname()\lrun()\lsetDaemon()\lsetName()\lstart()\l}", shape="record"];
+"1" [label="{Web|api_host : str\lapi_port : int\l|run()\l}", shape="record"];
+"1" -> "0" [arrowhead="empty", arrowtail="none"];
+}

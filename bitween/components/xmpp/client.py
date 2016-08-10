@@ -29,7 +29,6 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
 
         self.register_plugin('xep_0030')  # service discovery
         self.register_plugin('xep_0115')  # entity caps
-        self.register_plugin('xep_0128')  # service discovery extensions
         self.register_plugin('xep_0163')  # pep
 
         self.register_plugin('shares', module=share_plugin)

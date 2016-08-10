@@ -6,7 +6,7 @@ import imp
 
 from bitween import components
 
-class BasicTestSuite(unittest.TestCase):
+class BitTorrentTestSuite(unittest.TestCase):
     """Basic test cases."""
 
     def test_init(self):
