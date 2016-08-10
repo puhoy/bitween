@@ -17,7 +17,7 @@ virtualenv:
 sudo: required
 
 services:
-  - docker
+  #- docker
 
 before_install:
  - sudo apt-get update
@@ -30,6 +30,7 @@ before_install:
 
 install:
   - pip install -r requirements.txt
+  - pip install coverage
 
 script:
   - coverage run setup.py test
