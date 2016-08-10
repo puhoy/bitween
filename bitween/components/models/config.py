@@ -7,6 +7,7 @@ home = expanduser("~")
 
 
 here = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+conf = {}
 
 if os.path.isfile(os.path.join(here, '..', '..', 'conf.json')):
     with open(os.path.join(here, '..', '..', 'conf.json')) as f:
@@ -20,7 +21,8 @@ else:
     logger.error('could not find conf.json')
     print('no config file found!')
     print('you can find a sample config file in %s. (fill out and put it in ~/.bitween.json)' % os.path.abspath(os.path.join(here, '..', '..', 'conf.json.dist')))
-    exit(0)
+    if not os.environ.get('BITWEEN_TESTING', "") == "True":
+        exit(0)
 
 
 
