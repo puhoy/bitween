@@ -22,14 +22,14 @@ services:
 before_install:
  - sudo apt-get update
  - sudo apt-get -o Dpkg::Options::="--force-confdef"  -y --force-yes install docker-engine python-libtorrent
- - docker --version
- - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
- - chmod +x docker-compose
- - sudo mv docker-compose /usr/local/bin
- - docker-compose -f tests/test-env/docker-compose.yml up --force-recreate -d
+ #- docker --version
+ #- curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+ #- chmod +x docker-compose
+ #- sudo mv docker-compose /usr/local/bin
+ #- docker-compose -f tests/test-env/docker-compose.yml up --force-recreate -d
 
 install:
-  - pip install ipgetter sleekxmpp flask flask-jsonrpc netifaces humanize coveralls
+  - pip install -r requirements.txt
 
 script:
   - coverage run setup.py test
