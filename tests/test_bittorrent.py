@@ -20,5 +20,3 @@ class BitTorrentTestSuite(unittest.TestCase):
 
         assert b.end == True
 
-if __name__ == '__main__':
-    unittest.main()

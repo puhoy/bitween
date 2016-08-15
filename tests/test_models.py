@@ -43,3 +43,6 @@ class ModelsTestSuite(unittest.TestCase):
             hash: shares.get_ipv4_addresses('new_user', 'new_resource') +
                   shares.get_ipv6_addresses('new_user', 'new_resource')
         }
+
+if __name__ == '__main__':
+    unittest.main()

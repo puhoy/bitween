@@ -53,5 +53,3 @@ class PubsubTestSuite(unittest.TestCase):
         assert s.has_messages() is True
 
 
-if __name__ == '__main__':
-    unittest.main()

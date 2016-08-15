@@ -26,7 +26,7 @@ enable_web_api = conf.get('enable_web_api', False)
 app = Flask(__name__)
 jsonrpc = JSONRPC(app, '/api', enable_web_browsable_api=enable_web_api)
 
-from .api import versions, safe_exit, get_all_torrents
+from .api import versions, safe_exit
 from .api.bt import get_torrents, add_path, add_torrent_by_hash, del_torrent
 from .api.xmpp import get_all_hashes, get_all_shares
 
