@@ -26,7 +26,13 @@
         });
     };
 </script>
-
+<script>
+$("#the-file-input").change(function() {
+    // will log a FileList object, view gifs below
+    var path = (window.URL || window.webkitURL).createObjectURL(this.files[0]);
+    console.log('path', path);
+});
+</script>
 {% endblock scripts %}
 {% block page_content %}
     {{ super() }}
@@ -49,6 +55,7 @@
     </li>
     {% endfor %}
 </ul>
+<!-- with input that accepts one file -->
 
 {% else %}
 
@@ -56,6 +63,8 @@ no torrents. maybe you should add a few.
 
 {% endif %}
 
+<h4>share a file</h4>
+<input id="the-file-input" type="file">
 
 
 {% endblock page_content %}}

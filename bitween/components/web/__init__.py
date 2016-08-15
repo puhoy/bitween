@@ -33,10 +33,8 @@ from .api.xmpp import get_all_hashes, get_all_shares
 bootstrap = Bootstrap()
 bootstrap.init_app(app)
 
-moment = Moment()
-moment.init_app(app)
-
 from .gui import gui as gui_blueprint
+
 app.register_blueprint(gui_blueprint)
 
 
@@ -48,5 +46,3 @@ class Web(Thread):
 
     def run(self):
         app.run(host=self.api_host, port=self.api_port)
-
-

@@ -1,6 +1,7 @@
 
 from .. import jsonrpc
 from .. import publish
+from .. import logger
 
 from flask import request
 from bitween.components import contact_shares
@@ -24,14 +25,4 @@ def safe_exit():
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
-
-
-@jsonrpc.method('Api.get_all_torrents')
-def get_all_torrents():
-    """
-    return a list of all discovered bitween clients and their torrents
-
-    :return:
-    """
-    return contact_shares.dict
 
