@@ -5,21 +5,15 @@ from bitween.components import handles
 
 from bitween.components import contact_shares
 
-@gui.route('/', methods=['GET', 'POST'])
+@gui.route('/', methods=['GET'])
 def index():
     """
 
     :return:
     """
+    return render_template('gui_index.html', torrents=handles.get_shares())
 
-    torrents = []
-
-    for t in handles.get_shares():
-        torrents.append(t)
-
-    return render_template('gui_index.html', torrents=torrents)
-
-@gui.route('/search', methods=['GET', 'POST'])
+@gui.route('/search', methods=['GET'])
 def search():
     """
 
@@ -39,21 +33,4 @@ def search():
 
 
     return render_template('gui_search.html', hashes=hashes)
-
-
-
-@gui.route('/favicon.ico')
-def favicon():
-    return url_for('static', filename='favicon.ico')
-
-
-@gui.route('/static/about')
-def about():
-    """
-    path to the static about page
-
-    :return:
-    """
-
-    return render_template('gui_about.html')
 

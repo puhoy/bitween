@@ -1,4 +1,3 @@
-__author__ = 'meatpuppet'
 
 from flask import Blueprint
 
