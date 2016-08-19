@@ -14,7 +14,6 @@ from .. import publish
 
 from flask import Flask
 from flask.ext.bootstrap import Bootstrap
-from flask.ext.moment import Moment
 
 from flask_jsonrpc import JSONRPC
 from threading import Thread
@@ -35,7 +34,6 @@ from .api.xmpp import get_all_hashes, get_all_shares
 bootstrap = Bootstrap()
 bootstrap.init_app(app)
 
-
 app.register_blueprint(gui_blueprint)
 
 
@@ -47,4 +45,3 @@ class Web(Thread):
 
     def run(self):
         app.run(host=self.api_host, port=self.api_port)
-
