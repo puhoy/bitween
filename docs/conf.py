@@ -46,7 +46,7 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['libtorrent', 'flask']
+MOCK_MODULES = ['libtorrent', 'flask_jsonrpc']
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
