@@ -47,3 +47,4 @@ class Web(Thread):
 
     def run(self):
         app.run(host=self.api_host, port=self.api_port)
+

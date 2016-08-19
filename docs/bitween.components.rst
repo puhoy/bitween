@@ -7,9 +7,9 @@ Subpackages
 .. toctree::
 
     bitween.components.bt
-    bitween.components.jsonrpc_api
     bitween.components.models
     bitween.components.pubsub
+    bitween.components.web
     bitween.components.xmpp
 
 Module contents

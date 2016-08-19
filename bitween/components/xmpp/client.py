@@ -14,6 +14,7 @@ from .. import Web
 
 from . import publish
 
+
 def create_torrent_client():
     ts = BitTorrentClient()
     ts.start()
@@ -21,7 +22,19 @@ def create_torrent_client():
 
 
 class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
+    """
+    XmppClient class
+
+    """
     def __init__(self, jid, password, api_host='localhost', api_port=8080):
+        """
+        Initialize a new XmppClient Object: fetch Addresses, start the API on api_host:api_port and start the BT Client
+
+        :param jid:
+        :param password:
+        :param api_host:
+        :param api_port:
+        """
         Subscriber.__init__(self, autosubscribe=True)
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
@@ -55,17 +68,10 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
 
     def start(self, event):
         """
-        Process the session_start event.
+        Process the start_event
 
-        Typical actions for the session_start event are
-        requesting the roster and broadcasting an initial
-        presence stanza.
-
-        Arguments:
-            event -- An empty dictionary. The session_start
-                     event does not provide any additional
-                     data.
-
+        :param event: start event
+        :return:
         """
         logger.debug('sending presence & getting roster for %s' % self.boundjid)
 
@@ -76,7 +82,7 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
 
     def process_queue(self):
         '''
-        do something with the queue here
+        Processes the IPC Message Queue
 
         :return:
         '''
@@ -89,15 +95,31 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
     def on_publish_shares(self):
+        """
+        triggers the publishing of the own shares
+
+        :return:
+        """
         logger.debug('publishing shares')
         self['shares'].publish_shares(handles.get_shares(), self.addresses)
 
-
     def on_set_port(self, port):
-        # todo
-        pass
+        """
+        set a NAT Port to send with the shares
+
+        :param port: Port number
+        :type port: int
+        :return:
+        """
+        self.addresses.nat_ports.append(port)
+        logger.info('found nat port %s' % port)
 
     def on_exit(self):
+        """
+        trigger shutdown
+
+        :return:
+        """
         logger.debug('sending empty shares')
         self['shares'].stop()
 

@@ -4,6 +4,14 @@ bitween.components.pubsub package
 Submodules
 ----------
 
+bitween.components.pubsub.autosubscriber module
+-----------------------------------------------
+
+.. automodule:: bitween.components.pubsub.autosubscriber
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 bitween.components.pubsub.pubsub module
 ---------------------------------------
 

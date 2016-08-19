@@ -12,6 +12,14 @@ bitween.components.bt.client module
     :undoc-members:
     :show-inheritance:
 
+bitween.components.bt.helpers module
+------------------------------------
+
+.. automodule:: bitween.components.bt.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

@@ -40,9 +40,10 @@ class ContactShares:
 
     def get_user(self, jid):
         """
+        get user dict
 
         :param jid:
-        :return:
+        :return: dictionary with all data for user with jid
         """
         jid = str(jid)
         if not self.dict.get(jid, {}):
@@ -52,6 +53,7 @@ class ContactShares:
 
     def get_resource(self, jid, resource):
         """
+        get resource dict of user with JID jid
 
         :param jid:
         :param resource:
@@ -68,6 +70,7 @@ class ContactShares:
 
     def add_address(self, jid, resource, address, port):
         """
+        add Address and Port to Resource resource of jid
 
         :param jid:
         :param resource:
@@ -85,16 +88,18 @@ class ContactShares:
 
     def get_ipv4_addresses(self, jid, resource):
         """
+        return all IPv4 Addresses of JIDs Resource resource
 
         :param jid:
         :param resource:
-        :return:
+        :return: list of IPv4 Addresses
         """
         res = self.get_resource(jid, resource)
         return res.get('ip_v4', [])
 
     def get_ipv6_addresses(self, jid, resource):
         """
+        return all IPv6 Addresses of JIDs Resource resource
 
         :param jid:
         :param resource:
@@ -105,6 +110,7 @@ class ContactShares:
 
     def clear_addresses(self, jid, resource):
         """
+        clear Addresses of JIDs Resource
 
         :param jid:
         :param resource:
@@ -116,6 +122,7 @@ class ContactShares:
 
     def clear_shares(self, jid, resource):
         """
+        clear Shares of JIDs Resource
 
         :param jid:
         :param resource:
@@ -125,6 +132,14 @@ class ContactShares:
         res['shares'] = {}
 
     def clear(self, jid, resource=None):
+        """
+        clear whole User with JID jid.
+        If resource != None, clear resource of the JID
+
+        :param jid:
+        :param resource:
+        :return:
+        """
         jid = str(jid)
         if resource == None:
             self.dict[jid] = {}
@@ -133,6 +148,21 @@ class ContactShares:
             self.clear_shares(jid, resource)
 
     def add_share(self, jid, resource, hash, name='', size=0, files=None):
+        """
+        Add a Share to a JIDs Resource
+
+        :param jid:
+        :param resource:
+        :param hash: SHA1 Hash
+        :type hash: str
+        :param name: name of the share
+        :type name: str
+        :param size: size of the share in bytes
+        :type size: int
+        :param files: list of files in the Share
+        :type files: list of str
+        :return:
+        """
         res = self.get_resource(jid, resource)
         res['shares'][hash] = {}
         res['shares'][hash]['name'] = name
@@ -141,6 +171,14 @@ class ContactShares:
         res['shares'][hash]['hash'] = hash
 
     def add_share_by_info(self, jid, resource, info):
+        """
+        add a share by torrent info
+
+        :param jid:
+        :param resource:
+        :param info: dict from torrent_handles.get_shares()
+        :return:
+        """
         self.add_share(jid, resource, info.get('hash'), info.get('name', ''), info.get('total_size', 0))
 
     def __iter__(self):

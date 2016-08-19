@@ -8,6 +8,7 @@ from bitween.components import contact_shares
 @gui.route('/', methods=['GET'])
 def index():
     """
+    return rendered template containing the own shares
 
     :return:
     """
@@ -16,6 +17,7 @@ def index():
 @gui.route('/search', methods=['GET'])
 def search():
     """
+    return a rendered template containing all found shares
 
     :return:
     """

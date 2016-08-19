@@ -8,6 +8,11 @@ needed for testing
 from .pubsub import Subscriber
 
 class AutoSub(Subscriber):
+    """
+    Democlass for autosubscribing
+
+    needed for testing
+    """
     def __init__(self):
         Subscriber.__init__(self, autosubscribe=True)
 

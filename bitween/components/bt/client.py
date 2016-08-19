@@ -112,25 +112,7 @@ class BitTorrentClient(Thread, Subscriber):
 
         session_settings = lt.session_settings()
 
-        # session_settings.announce_to_all_tiers = False  # announce_to_all_tiers also controls how multi tracker torrents are treated. When this is set to true, one tracker from each tier is announced to. This is the uTorrent behavior. This is false by default in order to comply with the multi-tracker specification.
-        # session_settings.announce_to_all_trackers = False  # announce_to_all_trackers controls how multi tracker torrents are treated. If this is set to true, all trackers in the same tier are announced to in parallel. If all trackers in tier 0 fails, all trackers in tier 1 are announced as well. If it's set to false, the behavior is as defined by the multi tracker specification. It defaults to false, which is the same behavior previous versions of libtorrent has had as well.
-        # session_settings.connection_speed = 100  # connection_speed is the number of connection attempts that are made per second. If a number < 0 is specified, it will default to 200 connections per second. If 0 is specified, it means don't make outgoing connections at all.
-        # session_settings.ignore_limits_on_local_network = True  # ignore_limits_on_local_network, if set to true, upload, download and unchoke limits are ignored for peers on the local network.
-        # session_settings.peer_connect_timeout = 2  # peer_connect_timeout the number of seconds to wait after a connection attempt is initiated to a peer until it is considered as having timed out. The default is 10 seconds. This setting is especially important in case the number of half-open connections are limited, since stale half-open connection may delay the connection of other peers considerably.
-        # session_settings.rate_limit_ip_overhead = True  # If rate_limit_ip_overhead is set to true, the estimated TCP/IP overhead is drained from the rate limiters, to avoid exceeding the limits with the total traffic
-        # session_settings.allow_multiple_connections_per_ip = True  # allow_multiple_connections_per_ip determines if connections from the same IP address as existing connections should be rejected or not. Multiple connections from the same IP address is not allowed by default, to prevent abusive behavior by peers. It may be useful to allow such connections in cases where simulations are run on the same machie, and all peers in a swarm has the same IP address
-        # session_settings.request_timeout = 5
-        # session_settings.torrent_connect_boost = 100  # torrent_connect_boost is the number of peers to try to connect to immediately when the first tracker response is received for a torrent. This is a boost to given to new torrents to accelerate them starting up. The normal connect scheduler is run once every second, this allows peers to be connected immediately instead of waiting for the session tick to trigger connections.
-
         self.session.set_settings(session_settings)
-
-        # extensions
-        # self.session.add_extension(
-        #    lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
-        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
-        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
-        # self.session.add_extension(
-        #    lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
 
     def setup_db(self):
         """
@@ -150,7 +132,6 @@ class BitTorrentClient(Thread, Subscriber):
 
     def __del__(self):
         logger.info("torrentsession exits!")
-        # exit(0)
 
     def on_exit(self):
         self.safe_shutdown()
@@ -165,6 +146,11 @@ class BitTorrentClient(Thread, Subscriber):
         self.end = True
 
     def handle_queue(self):
+        """
+        handle the IPC Message queue
+
+        :return:
+        """
         if self.has_messages():
             topic, args, kwargs = self.get_message()
             try:
@@ -174,6 +160,12 @@ class BitTorrentClient(Thread, Subscriber):
                 logger.error('something went wrong when calling on_%s: %s' % (topic, e))
 
     def handle_alert(self, alert):
+        """
+        Handle the libtorrent Alerts
+
+        :param alert:
+        :return:
+        """
         #   http://www.libtorrent.org/reference-Alerts.html
         if (alert.what() == "save_resume_data_alert") \
                 or (alert.what() == "save_resume_data_failed_alert"):
@@ -263,6 +255,11 @@ class BitTorrentClient(Thread, Subscriber):
         return
 
     def on_recheck_handles(self):
+        """
+        recheck all handles, maybe we have new endpoints
+
+        :return:
+        """
         for handle in self.handles:
             addr_tuples = contact_shares.hashes.get(str(handle.info_hash()), [])
             for addr_tuple in addr_tuples:
@@ -311,21 +308,6 @@ class BitTorrentClient(Thread, Subscriber):
                 logger.error('cant connect to %s:%s: %s' %
                              (addr_tuple[0], addr_tuple[1], e))
 
-    '''
-    def on_add_torrent(self, torrentfilepath, save_path):
-        """
-        creates a handle for a torrentfile and adds it to the session
-
-        :param torrentfilepath: string with the path to the torrentfile
-        :param save_path: string with the path to save
-        :return:
-        """
-        logger.info("adding torrentfile")
-        # info = lt.torrent_info(torrentfilepath)
-        info = lt.torrent_info(lt.bdecode(open(torrentfilepath, 'rb').read()))
-        self.add_torrent_by_info(info, save_path)
-        self.publish('publish_shares')
-    '''
 
     def _add_torrent_by_info(self, torrentinfo, save_path, resumedata=None):
         """

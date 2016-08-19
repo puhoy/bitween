@@ -31,12 +31,37 @@ class Handles:
         return len(self.handles)
 
     def append(self, item):
+        """
+        append a handle to the handle list
+
+        :param item:
+        :return:
+        """
         self.handles.append(item)
 
     def remove(self, item):
+        """
+        remove a handle from the handle list
+
+        :param item:
+        :return:
+        """
         self.handles.remove(item)
 
     def get_shares(self):
+        """
+        get a list of own shares
+
+        [{
+            "files": [], # list of files
+            "total_size": 0, # total size in bytes
+            "name": "", # name of the torrent
+            "hash": "", # sha hash
+            "done": 0 # bytes done
+        }]
+
+        :return:
+        """
         infos = []
         for handle in self.handles:
             try:

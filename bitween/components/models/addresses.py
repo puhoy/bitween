@@ -1,6 +1,3 @@
-import netifaces
-import ipgetter
-
 from . import logger
 from .config import conf
 from .helpers import get_ip_addresses
@@ -10,22 +7,14 @@ from .. import publish
 class Addresses:
     def __init__(self, ports=None, ip_v4=None, ip_v6=None):
         """
+        Model for storing own Addresses and Ports
 
         :param ports:
+        :type ports: [int]
         :param ip_v4:
+        :type ip_v4: [str]
         :param ip_v6:
-        """
-        """
-        if ip_v6 is None:
-            ip_v6 = []
-        if ip_v4 is None:
-            ip_v4 = []
-        self.ip_v4 = ip_v4
-        self.ip_v6 = ip_v6
-
-        if ports is None:
-            ports = []
-        self.ports = ports
+        :type ip_v6: [str]
         """
 
         self.ip_v4 = []

@@ -29,8 +29,6 @@ def get_ip_addresses():
     and all global IPv6 addresses netifaces reads from the system
 
 
-
-
     :return: {'ip_v4': [ip_v4_addresses], # one IPv4 address in a list
             'ip_v6': ip_v6}  # a list of IPv6 addresses
     """
