@@ -8,7 +8,7 @@ install_reqs = parse_requirements("requirements.txt", session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 
 
-with open('README.md') as f:
+with open('README.rst') as f:
     readme = f.read()
 
 # with open('LICENSE') as f:
