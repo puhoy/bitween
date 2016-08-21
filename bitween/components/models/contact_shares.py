@@ -147,6 +147,7 @@ class ContactShares:
             self.clear_addresses(jid, resource)
             self.clear_shares(jid, resource)
 
+
     def add_share(self, jid, resource, hash, name='', size=0, files=None):
         """
         Add a Share to a JIDs Resource

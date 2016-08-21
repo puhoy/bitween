@@ -118,6 +118,13 @@ class BitTorrentClient(Thread, Subscriber):
 
         self.session.set_settings(session_settings)
 
+        # extensions
+        self.session.add_extension(lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
+        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
+        # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
+        # self.session.add_extension(
+        #    lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
+
     def setup_db(self):
         """
         called by the init method.
