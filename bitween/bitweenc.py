@@ -61,9 +61,10 @@ class BitweenClient:
 
     def list(self):
         hashes = {}
-        method = "Api.get_all_torrents"
-        contacts = self.post(method).json()['result']
-        # print(contacts)
+        method = "xmpp.get_shares"
+        res = self.post(method).json()
+        #print(res)
+        contacts = res['shares']
 
         for contact in contacts:
             for resource in contacts[contact]:
@@ -74,7 +75,7 @@ class BitweenClient:
                                     'size': val_dict['size'],
                                     'contacts': c}
 
-        # print(json.dumps(hashes, indent=2))
+        #print(json.dumps(hashes, indent=2))
         for h, v in hashes.iteritems():
             print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
 

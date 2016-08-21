@@ -42,7 +42,7 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
 
         self.register_plugin('shares', module=share_plugin)
 
-        self.scheduler.add("_schedule", 2, self.process_queue, repeat=True)
+        self.scheduler.add("_schedule", 0.5, self.process_queue, repeat=True)
 
         # self.auto_authorize = True
         # self.auto_subscribe = True
