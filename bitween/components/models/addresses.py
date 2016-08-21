@@ -1,5 +1,5 @@
 from . import logger
-from .config import conf
+from bitween.components.models import config
 from .helpers import get_ip_addresses
 from bitween.components.pubsub import publish
 
@@ -32,8 +32,12 @@ class Addresses:
     def fetch_addresses(self):
         addresses = get_ip_addresses()
 
-        if conf.get("enable_ipv4", False):
+        logger.debug('have conf: %s' % config)
+
+        if config.conf.get("enable_ipv4", False):
             self.ip_v4 = addresses.get('ip_v4', [])
 
-        if conf.get("enable_ipv6", False):
+        if config.conf.get("enable_ipv6", False):
             self.ip_v6 = addresses.get('ip_v6', [])
+
+        logger.debug('new addresses: %s, %s' % (self.ip_v4, self.ip_v6))

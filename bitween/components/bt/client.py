@@ -287,7 +287,7 @@ class BitTorrentClient(Thread, Subscriber):
             'save_path': save_path,
             'duplicate_is_error': True
         }
-        logger.debug('adding new handly by magnetlink')
+        logger.debug('adding new handle by magnetlink')
         handle = lt.add_magnet_uri(self.session, utf8_encoded(mlink), params)
         self.handles.append(handle)
 

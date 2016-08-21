@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser
 
-from bitween.components import config
+from bitween.components.models import config
 from bitween.components.xmpp import XmppClient
 from bitween.log import setup_logging
 
