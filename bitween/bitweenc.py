@@ -8,6 +8,7 @@ import humanize
 import requests
 
 from bitween.log import setup_logging
+from os.path import expanduser
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class BitweenClient:
     def add_hash(self, hash, dest=None):
         import os
         if not dest:
-            dest = json.load(open('conf.json'))['save_path']
+            dest = conf['save_path']
         method = "bt.add_torrent_by_hash"
         params = {
             "hash": hash,
@@ -97,6 +98,41 @@ class BitweenClient:
         }
         print(self.post(method, params))
 
+def load_conf():
+
+    home = expanduser("~")
+
+    here = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+
+    conf = {}
+
+    if os.path.isfile(os.path.join(here, 'conf.json')):
+        logger.info('loading conf from %s', os.path.join(here, '..', '..', 'conf.json'))
+        with open(os.path.join(here, 'conf.json')) as f:
+            conf = json.load(f)
+
+    elif os.path.isfile(os.path.join(home, '.bitween.json')):
+        logger.info('loading conf from %s', os.path.join(home, '.bitween.json'))
+        with open(os.path.join(home, '.bitween.json')) as f:
+            conf = json.load(f)
+
+    else:
+        logger.error('could not find conf.json')
+        print('no config file found!')
+        print('you can find a sample config file in %s. (fill out and put it in ~/.bitween.json)' % os.path.abspath(
+            os.path.join(here, 'conf.json.dist')))
+        if not os.environ.get('BITWEEN_TESTING', "") == "True":
+            exit(0)
+
+    # create default dir for storing data we leech
+    save_path = conf.get('save_path', 'share')
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+
+    conf['save_path'] = save_path
+    return conf
+
+conf = load_conf()
 
 def main(args=None):
     parser = ArgumentParser()
