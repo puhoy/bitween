@@ -54,16 +54,20 @@ the save_path is the default save path to download to.
 .. code-block:: none
 
     {
-      "xmpp_account": {
+      "xmpp_account":
+        {
           "jid": "user@domain",
           "password": ""
-      }
-
+        },
       "save_path": "share",
+      "enable_web_api": true,
       "enable_ipv4": true,
-      "enable_ipv6": false,
-      "enable_upnp": true,
-      "enable_natpmp": true
+      "enable_ipv6": true,
+      "bt": {
+        "enable_upnp": true,
+        "enable_natpmp": true,
+        "ports": [8000, 8020]
+      }
     }
 
 
