@@ -143,6 +143,7 @@ class BitTorrentClient(Thread, Subscriber):
 
         :return:
         """
+        logger.info('triggering safe shutdown')
         self.end = True
 
     def handle_queue(self):
@@ -167,11 +168,7 @@ class BitTorrentClient(Thread, Subscriber):
         :return:
         """
         #   http://www.libtorrent.org/reference-Alerts.html
-        if (alert.what() == "save_resume_data_alert") \
-                or (alert.what() == "save_resume_data_failed_alert"):
-            handle = alert.handle
-
-        elif alert.what() == "torrent_update_alert":
+        if alert.what() == "torrent_update_alert":
             self.publish('publish_shares')
         elif alert.what() == "state_update_alert":
             self.publish('publish_shares')
@@ -207,7 +204,7 @@ class BitTorrentClient(Thread, Subscriber):
             self.handles.remove(handle)
         elif (alert.what() == "save_resume_data_failed_alert"):
             handle = alert.handle
-            logger.debug("removing %s" % handle.name())
+            logger.error("failed removing %s" % handle.name())
             self.session.remove_torrent(handle)
             self.handles.remove(handle)
         else:
@@ -232,26 +229,27 @@ class BitTorrentClient(Thread, Subscriber):
                 self.handle_alert(alert)
             time.sleep(1)
 
-        logger.debug("ending")
+        logger.info("ending")
         # ending - save stuff
         # erase previous torrents first
         self.erase_all_torrents_from_db()
 
         # then trigger saving resume data
         for handle in self.handles:
+            logger.debug('asking for resume data for %s' % handle.get_torrent_info().name())
             handle.save_resume_data(lt.save_resume_flags_t.flush_disk_cache)
 
         # set alert mast to get the right alerts
-        self.session.set_alert_mask(lt.alert.category_t.storage_notification)
+        #self.session.set_alert_mask(lt.alert.category_t.storage_notification)
 
         # wait for everything to save and finish!
         while self.handles:
             # logger.debug(self.handles.list)
             for alert in self.session.pop_alerts():
-                # logger.debug("- %s %s" % (alert.what(), alert.message()))
+                logger.debug("- %s %s" % (alert.what(), alert.message()))
                 self.handle_alert(alert)
-        time.sleep(1)
-        logger.debug("handles at return: %s" % self.handles)
+            time.sleep(1)
+        logger.info("handles at return: %s" % self.handles)
         return
 
     def on_recheck_handles(self):

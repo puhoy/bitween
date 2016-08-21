@@ -119,7 +119,7 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         logger.debug('sending empty shares')
         self['shares'].stop()
 
-        self.bt_client.join()
         self.api.join()
+        self.bt_client.join()
 
         self.disconnect(wait=True)
