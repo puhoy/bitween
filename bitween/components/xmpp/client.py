@@ -109,6 +109,7 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         """
         self.addresses.nat_ports.append(port)
         logger.info('found nat port %s' % port)
+        self.publish('publish_shares')
 
     def on_exit(self):
         """

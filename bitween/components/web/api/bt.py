@@ -8,7 +8,7 @@ import os
 
 from flask import jsonify
 
-from bitween.components import publish
+from bitween.components.pubsub import publish
 from .. import jsonrpc
 from bitween.components import handles
 

@@ -263,7 +263,7 @@ class BitTorrentClient(Thread, Subscriber):
             for addr_tuple in addr_tuples:
                 try:
                     if addr_tuple not in [peer_info.ip for peer_info in handle.get_peer_info()]:
-                        logger.info('connecting to %s' % addr_tuple[0])
+                        logger.info('connecting to %s:%s' % (addr_tuple[0], addr_tuple[1]))
                         handle.connect_peer((addr_tuple[0], int(addr_tuple[1])), 0)
                 except Exception as e:
                     logger.error('recheck_handles: cant connect to %s:%s: %s' %

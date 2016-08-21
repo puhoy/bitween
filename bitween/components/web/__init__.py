@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info('initializing %s' % __name__)
 
-from .. import config
+from bitween.components.models import config
 from .. import publish
 
 from flask import Flask
