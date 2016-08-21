@@ -40,7 +40,6 @@ class UserShares(BasePlugin):
     def _update_own_shares(self, handle_infos, addresses):
         # write shares to contact_shares
         contact_shares.clear(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource)
-
         if contact_shares.dict[self.xmpp.boundjid.bare].get('', False):
             del contact_shares.dict[self.xmpp.boundjid.bare]['']
 
@@ -48,7 +47,8 @@ class UserShares(BasePlugin):
 
         for h in handle_infos:
             if h.get('hash', False):
-                contact_shares.add_share_by_info(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, h)
+                if addresses.ip_v4 + addresses.ip_v6 and addresses.ports + addresses.nat_ports and handle_infos:
+                    contact_shares.add_share_by_info(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, h)
 
         # and add our addresses
         logger.info('addresses: %s' % (addresses.ip_v4 + addresses.ip_v6))

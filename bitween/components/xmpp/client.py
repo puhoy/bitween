@@ -11,6 +11,7 @@ from . import share_plugin
 from bitween.components.bt import BitTorrentClient
 from bitween.components.web import Web
 
+
 def create_torrent_client():
     ts = BitTorrentClient()
     ts.start()
