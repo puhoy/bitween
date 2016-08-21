@@ -12,21 +12,7 @@ from bitween.log import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-"""
-POST /api
-{
-  "date": "Wed, 04 May 2016 11:00:06 GMT",
-  "server": "Werkzeug/0.11.5 Python/2.7.6",
-  "content-length": "90",
-  "content-type": "application/json",
-  "data": {
-    "jsonrpc": "2.0",
-    "method": "Api.exit",
-    "params": [],
-    "id": "e998df3f-523b-4533-915f-99bc2936f1bf"
-  }
-}
-"""
+
 
 
 class BitweenClient:
@@ -35,6 +21,31 @@ class BitweenClient:
         self.port = port
 
     def post(self, method, params=None):
+        """
+        post data to run methods
+
+        .. code-block:: json
+
+            POST /api
+            {
+              "date": "Wed, 04 May 2016 11:00:06 GMT",
+              "server": "Werkzeug/0.11.5 Python/2.7.6",
+              "content-length": "90",
+              "content-type": "application/json",
+              "data": {
+                "jsonrpc": "2.0",
+                "method": "Api.exit",
+                "params": [],
+                "id": "e998df3f-523b-4533-915f-99bc2936f1bf"
+              }
+            }
+
+
+        :param method:
+        :param params:
+        :return:
+        """
+
         if params is None:
             params = []
         data = {"jsonrpc": "2.0",

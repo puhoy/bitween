@@ -17,13 +17,13 @@ from threading import Thread
 
 import libtorrent as lt
 
-from . import Subscriber
-from ..models import contact_shares
-from . import handles
+from bitween.components.pubsub import Subscriber
+from bitween.components.models import contact_shares
+from bitween.components.models import handles
 
 from . import logger
 
-from .. import config
+from bitween.components.models import config
 from .helpers import utf8_encoded
 
 conf = config.conf

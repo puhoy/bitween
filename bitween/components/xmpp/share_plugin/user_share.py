@@ -3,10 +3,10 @@ from . import UserSharesStanza, ShareItemStanza, ResourceStanza, AddressStanza
 from sleekxmpp.xmlstream import register_stanza_plugin
 import logging
 
-from .. import Addresses
-from .. import contact_shares
+from bitween.components.models import Addresses
+from bitween.components.models import contact_shares
 
-from .. import publish
+from bitween.components.pubsub import publish
 
 logger = logging.getLogger(__name__)
 

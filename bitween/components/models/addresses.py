@@ -1,7 +1,7 @@
 from . import logger
 from .config import conf
 from .helpers import get_ip_addresses
-from .. import publish
+from bitween.components.pubsub import publish
 
 
 class Addresses:

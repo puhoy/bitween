@@ -1,19 +1,15 @@
 import sys
 import sleekxmpp
-from .. import Subscriber
+from bitween.components.pubsub import Subscriber
 
-from .. import contact_shares
-from .. import handles
-from .. import Addresses
+from bitween.components.models import handles
+from bitween.components.models import Addresses
 
 from . import logger
 from . import share_plugin
 
-from .. import BitTorrentClient
-from .. import Web
-
-from . import publish
-
+from bitween.components.bt import BitTorrentClient
+from bitween.components.web import Web
 
 def create_torrent_client():
     ts = BitTorrentClient()
