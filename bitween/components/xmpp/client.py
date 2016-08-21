@@ -108,6 +108,7 @@ class XmppClient(Subscriber, sleekxmpp.ClientXMPP):
         :return:
         """
         self.addresses.nat_ports.append(port)
+        self.addresses.nat_ports = list(set(self.addresses.nat_ports))
         logger.info('found nat port %s' % port)
         self.publish('publish_shares')
 

@@ -26,7 +26,7 @@ from . import logger
 from bitween.components.models import config
 from .helpers import utf8_encoded
 
-conf = config.conf
+
 
 
 class BitTorrentClient(Thread, Subscriber):
@@ -69,6 +69,9 @@ class BitTorrentClient(Thread, Subscriber):
 
         self.setup_settings()
 
+        conf = config.conf
+
+        logger.debug('conf: %s' % conf)
         if conf.get('bt', False):
             if conf['bt'].get('ports', False):
                 ports = conf['bt'].get('ports')
@@ -78,18 +81,19 @@ class BitTorrentClient(Thread, Subscriber):
                     logger.error('could not set ports for BT: %s' % e)
 
 
-        # self.session.start_dht()
-        # self.session.start_lsd()
-        if conf.get("enable_upnp", False):
-            self.session.start_upnp()
-        else:
-            self.session.stop_upnp()
-        if conf.get("enable_natpmp", False):
-            self.session.start_natpmp()
-        else:
-            self.session.stop_natpmp()
+            if conf['bt'].get("enable_upnp", False):
+                self.session.start_upnp()
+            else:
+                logger.info('running without upnp')
+                self.session.stop_upnp()
 
-        self.session.stop_dht()
+            if conf['bt'].get("enable_natpmp", False):
+                self.session.start_natpmp()
+            else:
+                logger.info('running without natpmp')
+                self.session.stop_natpmp()
+
+        # self.session.stop_dht()
         # self.session.stop_lsd()
 
         self.resume()  # load torrents from db
@@ -222,7 +226,7 @@ class BitTorrentClient(Thread, Subscriber):
         """
 
 
-        logger.debug("BT running")
+        logger.debug("BT running ob port %s" % self.session.listen_port())
         while not self.end:
             self.handle_queue()
             for alert in self.session.pop_alerts():

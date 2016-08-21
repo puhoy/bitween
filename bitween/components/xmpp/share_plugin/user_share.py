@@ -47,6 +47,7 @@ class UserShares(BasePlugin):
                 contact_shares.add_share_by_info(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, h)
         # and add our addresses
         logger.info('addresses: %s' % (addresses.ip_v4 + addresses.ip_v6))
+        logger.info('ports: %s' % (addresses.ports + addresses.nat_ports))
         for address in addresses.ip_v4 + addresses.ip_v6:
             for port in addresses.ports + addresses.nat_ports:
                 contact_shares.add_address(self.xmpp.boundjid.bare, self.xmpp.boundjid.resource, address, port)
