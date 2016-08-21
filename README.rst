@@ -1,3 +1,17 @@
+.. image:: http://readthedocs.org/projects/bitween/badge/?version=develop
+   :target: http://bitween.readthedocs.io/en/develop/?badge=develop
+   :alt: Documentation Status
+
+.. image:: https://travis-ci.org/puhoy/bitween.svg?branch=develop
+   :target: https://travis-ci.org/puhoy/bitween
+   :alt: Build Status
+
+
+.. image:: https://coveralls.io/repos/github/puhoy/bitween/badge.svg?branch=develop
+   :target: https://coveralls.io/github/puhoy/bitween?branch=develop
+   :alt: Coverage Status
+
+
 Welcome to bitween's documentation!
 ===================================
 
@@ -85,24 +99,3 @@ this will list all the files you have got via xmpp, so if you have not added an 
 download files by hash::
 
     bitweenc --add_hash some_sha1_hash
-
-
-
-
-API Reference
--------------
-
-.. toctree::
-   :maxdepth: 2
-
-
-   bitween
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
