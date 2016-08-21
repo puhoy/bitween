@@ -25,9 +25,9 @@ def load_conf():
 
     conf = {}
 
-    if os.path.isfile(os.path.join(here, '..', '..', 'conf.json')):
+    if os.path.isfile(os.path.join(here, 'conf.json')):
         logger.info('loading conf from %s', os.path.join(here, '..', '..', 'conf.json'))
-        with open(os.path.join(here, '..', '..', 'conf.json')) as f:
+        with open(os.path.join(here, 'conf.json')) as f:
             conf = json.load(f)
 
     elif os.path.isfile(os.path.join(home, '.bitween.json')):
@@ -39,7 +39,7 @@ def load_conf():
         logger.error('could not find conf.json')
         print('no config file found!')
         print('you can find a sample config file in %s. (fill out and put it in ~/.bitween.json)' % os.path.abspath(
-            os.path.join(here, '..', '..', 'conf.json.dist')))
+            os.path.join(here, 'conf.json.dist')))
         if not os.environ.get('BITWEEN_TESTING', "") == "True":
             exit(0)
 
