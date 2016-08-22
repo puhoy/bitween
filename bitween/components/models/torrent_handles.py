@@ -52,13 +52,15 @@ class Handles:
         """
         get a list of own shares
 
-        [{
-            "files": [], # list of files
-            "total_size": 0, # total size in bytes
-            "name": "", # name of the torrent
-            "hash": "", # sha hash
-            "done": 0 # bytes done
-        }]
+        .. code-block:: json
+
+            [{
+                "files": [], # list of files
+                "total_size": 0, # total size in bytes
+                "name": "", # name of the torrent
+                "hash": "", # sha hash
+                "done": 0 # bytes done
+            }]
 
         :return:
         """
