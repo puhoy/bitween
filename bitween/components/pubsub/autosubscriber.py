@@ -17,6 +17,13 @@ class AutoSub(Subscriber):
         Subscriber.__init__(self, autosubscribe=True)
 
     def process_messages(self):
+        """
+        process messages
+
+        since this class autosubsribes topics, topic "some_topic" will resolve to "on_some_topic()"
+
+        :return:
+        """
         if self.has_messages():
             topic, args, kwargs = self.get_message()
         try:

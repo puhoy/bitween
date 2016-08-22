@@ -12,12 +12,28 @@ from os.path import expanduser
 
 logger = logging.getLogger(__name__)
 
+
 def start(api_host, api_port, conf):
+    """
+    start the xmpp client (and everything else)
+
+    :param api_host: host ip to bint the api to
+    :param api_port: api port to bind the api to
+    :param conf: conf dict
+    :return:
+    """
     c = XmppClient(conf['xmpp_account']['jid'], conf['xmpp_account']['password'], api_host, api_port)
     c.connect()
     c.process()
 
+
 def load_conf():
+    """
+    load a configuration file
+    searches a json file at /path/to/bitween/conf.json and, if not found, at ~/.bitween.json
+
+    :return: conf dict
+    """
 
     home = expanduser("~")
 
@@ -51,7 +67,14 @@ def load_conf():
     conf['save_path'] = save_path
     return conf
 
+
 def main(args=None):
+    """
+    main function to start bitweend
+
+    :param args:
+    :return:
+    """
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
@@ -65,7 +88,7 @@ def main(args=None):
         setup_logging(default_level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.info('starting up')
-    
+
     conf = load_conf()
 
     config.conf = conf

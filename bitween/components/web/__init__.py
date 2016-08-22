@@ -38,10 +38,27 @@ app.register_blueprint(gui_blueprint)
 
 
 class Web(Thread):
+    """
+    web thread
+    starts the gui and the jsonrpc api
+    """
     def __init__(self, api_host='localhost', api_port=8080):
+        """
+        initiate a new web class with api and basic gui
+
+        :param api_host:
+        :param api_port:
+        """
         super(Web, self).__init__()
         self.api_port = api_port
         self.api_host = api_host
 
     def run(self):
+        """
+        start the thread
+
+        triggered by .start()
+
+        :return:
+        """
         app.run(host=self.api_host, port=self.api_port)

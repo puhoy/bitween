@@ -1,11 +1,5 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-TODO
-
-this file holds the class for the bittorrent client
-
-"""
 
 import logging
 import os
@@ -31,10 +25,15 @@ from .helpers import utf8_encoded
 
 class BitTorrentClient(Thread, Subscriber):
     """
-    Backend for the TorrentSession
+    BitTorrent Client Class
     """
 
     def __init__(self):
+        """
+        initialize a new BitTorrent Client to run in a Thread
+
+        start with .start()
+        """
         Thread.__init__(self)
         Subscriber.__init__(self, autosubscribe=True)
 
@@ -120,7 +119,7 @@ class BitTorrentClient(Thread, Subscriber):
 
         # extensions
         self.session.add_extension(lt.create_metadata_plugin)  # Allows peers to download the metadata (.torren files) from the swarm directly. Makes it possible to join a swarm with just a tracker and info-hash.
-        # self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
+        self.session.add_extension(lt.create_ut_metadata_plugin)  # same, utorrent compatible
         # self.session.add_extension(lt.create_ut_pex_plugin)  # Exchanges peers between clients.
         # self.session.add_extension(
         #    lt.create_smart_ban_plugin)  # A plugin that, with a small overhead, can ban peers that sends bad data with very high accuracy. Should eliminate most problems on poisoned torrents.
@@ -145,6 +144,10 @@ class BitTorrentClient(Thread, Subscriber):
         logger.info("torrentsession exits!")
 
     def on_exit(self):
+        """
+        trigger a safe shutdown of the thread
+        :return:
+        """
         self.safe_shutdown()
 
     def safe_shutdown(self):
@@ -265,7 +268,9 @@ class BitTorrentClient(Thread, Subscriber):
 
     def on_recheck_handles(self):
         """
-        recheck all handles, maybe we have new endpoints
+        recheck all handles, in case we could have new endpoints
+
+        should be triggered by the xmpp client if we got new shares
 
         :return:
         """

@@ -8,8 +8,11 @@ def setup_logging(
         default_level=logging.INFO,
         env_key='LOG_CFG'
 ):
-    """Setup logging configuration
+    """
+    Set up logging
+    Called once at program start
 
+    read the config from logging.yml but set console loglevel to default_level
     """
     path = default_path
     value = os.getenv(env_key, None)

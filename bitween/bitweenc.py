@@ -14,16 +14,24 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-
-
 class BitweenClient:
     def __init__(self, host, port):
+        """
+        client class to access the bitweenc jsonrpc api
+
+        basically this is a wrapper around a requests.post method
+
+        :param host: bitweend host
+        :param port: bitweend port
+        """
         self.host = host
         self.port = port
 
     def post(self, method, params=None):
         """
         post data to run methods
+
+        example calls looks like:
 
         .. code-block:: json
 
@@ -57,14 +65,24 @@ class BitweenClient:
         return ret
 
     def exit(self):
+        """
+        trigger exit of bitweend
+
+        :return:
+        """
         method = "Api.exit"
         print(self.post(method))
 
     def list(self):
+        """
+        list collected shares and their sources
+
+        :return:
+        """
         hashes = {}
         method = "xmpp.get_shares"
         res = self.post(method).json()
-        #print(res)
+        # print(res)
         contacts = res['shares']
 
         for contact in contacts:
@@ -76,11 +94,18 @@ class BitweenClient:
                                     'size': val_dict['size'],
                                     'contacts': c}
 
-        #print(json.dumps(hashes, indent=2))
+        # print(json.dumps(hashes, indent=2))
         for h, v in hashes.iteritems():
             print("%s - %s - %s \n-- %s" % (h, humanize.naturalsize(v['size']), v['name'], ', '.join(v['contacts'])))
 
     def add_hash(self, hash, dest=None):
+        """
+        add a hash to download
+
+        :param hash: sha1 hash of the torrent
+        :param dest:
+        :return:
+        """
         import os
         if not dest:
             dest = conf['save_path']
@@ -92,14 +117,28 @@ class BitweenClient:
         print(self.post(method, params))
 
     def add_path(self, path):
+        """
+        add a new torrent by path
+
+        can be a file or a folder
+
+        :param path:
+        :return:
+        """
         method = "bt.add_path"
         params = {
             "path": path
         }
         print(self.post(method, params))
 
-def load_conf():
 
+def load_conf():
+    """
+    load a configuration file
+    searches a json file at /path/to/bitween/conf.json and, if not found, at ~/.bitween.json
+
+    :return:
+    """
     home = expanduser("~")
 
     here = os.path.join(os.path.abspath(os.path.dirname(__file__)))
@@ -132,9 +171,17 @@ def load_conf():
     conf['save_path'] = save_path
     return conf
 
+
 conf = load_conf()
 
+
 def main(args=None):
+    """
+    main function for the client
+
+    :param args:
+    :return:
+    """
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", default=5000)
     parser.add_argument("-b", "--bind", default='localhost')
@@ -162,6 +209,8 @@ def main(args=None):
     elif args.add_path:
         print('adding %s' % os.path.abspath(args.add_path))
         bc.add_path(args.add_path)
+    else:
+        parser.print_help()
 
 
 if __name__ == '__main__':

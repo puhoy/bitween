@@ -30,6 +30,14 @@ class Addresses:
         return self.ip_v6 is not []
 
     def fetch_addresses(self):
+        """
+        fetch IPv4 and IPv6 Addresses
+
+        IPv4 will be fetched from a random server vis ipgetter, so this could take time.
+        IPv6 will be read from system.
+
+        :return:
+        """
         addresses = get_ip_addresses()
 
         logger.debug('have conf: %s' % config)

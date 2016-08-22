@@ -1,3 +1,8 @@
+"""
+Helper Functions for models
+
+"""
+
 import netifaces
 import ipgetter
 import socket
@@ -28,13 +33,15 @@ def get_ip_addresses():
     right now this would discover one IPv4 address (the one ipgetter is returning)
     and all global IPv6 addresses netifaces reads from the system
 
+    .. todo::
+
+        in future we need more ways to discover our own addresses,
+        for example getting addresses via upnp or from other BitTorrent clients we may have discovered
 
     :return: {'ip_v4': [ip_v4_addresses], # one IPv4 address in a list
             'ip_v6': ip_v6}  # a list of IPv6 addresses
     """
-    # TODO:
-    # in future we need more ways to discover our own addresses,
-    # for example getting addresses via upnp or from other BitTorrent clients we may have discovered
+
 
 
     ip_v4 = ""
@@ -57,7 +64,6 @@ def get_ip_addresses():
             'ip_v6': ip_v6}
 
 
-# check methods from http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
 def is_valid_ipv4_address(address):
     """
     from http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
