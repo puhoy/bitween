@@ -92,7 +92,7 @@ class BitTorrentClient(Thread, Subscriber):
                 logger.info('running without natpmp')
                 self.session.stop_natpmp()
 
-        # self.session.stop_dht()
+        self.session.stop_dht()
         # self.session.stop_lsd()
 
         self.resume()  # load torrents from db
